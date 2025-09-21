@@ -1,0 +1,2 @@
+# kusoger
+Crappy game development
