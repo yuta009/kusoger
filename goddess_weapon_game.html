@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>女神の魔王殲滅兵器開発ゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* ステータスバー */
+        .status-bar {
+            height: 80px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #4a90e2;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 30px;
+        }
+
+        .resource {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .resource-label {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .resource-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+
+        .completion-gauge {
+            flex: 1;
+            max-width: 400px;
+            margin-left: auto;
+        }
+        .elapsed-time {
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .gauge-label {
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .gauge-container {
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #555;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(107, 207, 127, 0.5);
+            position: relative;
+            overflow: visible;
+        }
+
+        .gauge-fill::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: -4px;
+            width: 12px;
+            height: 28px;
+            background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,255,255,0));
+            filter: blur(2px);
+        }
+
+        /* 開発フィールド */
+        .development-field {
+            height: calc(100vh - 160px);
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #4a90e2;
+            margin: 0 10px;
+        }
+
+        .clicker {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 3px solid #ffd93d;
+            background: radial-gradient(circle, rgba(255, 217, 61, 0.15), rgba(255, 217, 61, 0.05));
+            box-shadow: 0 0 20px rgba(255, 217, 61, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.05s ease;
+        }
+
+        .clicker:active { transform: translate(-50%, -50%) scale(0.96); }
+
+        .core-visual {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            font-size: 48px;
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+            transition: all 0.3s ease;
+        }
+
+        /* 魔王の魂 接近演出 */
+        .threat-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 100% 50%, rgba(139,0,0,0.15), rgba(0,0,0,0));
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .demon-soul {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 56px;
+            text-shadow: 0 0 12px rgba(255,0,0,0.6);
+            pointer-events: none;
+            transition: transform 0.5s ease;
+        }
+
+        .module {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            border: 2px solid;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .module.human {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-color: #e74c3c;
+        }
+
+        .module.machine {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            border-color: #95a5a6;
+        }
+
+        .module.magic {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            border-color: #9b59b6;
+        }
+
+        .module:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .module.working {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .module-progress {
+            position: absolute;
+            bottom: -5px;
+            left: 2px;
+            right: 2px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4a90e2;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* 操作パネル */
+        .control-panel {
+            height: 80px;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid #4a90e2;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .control-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .control-btn.summon {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .control-btn.machine {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .control-btn.magic {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .cost-info {
+            font-size: 10px;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        /* エフェクト */
+        .effect {
+            position: absolute;
+            pointer-events: none;
+            font-size: 18px;
+            font-weight: bold;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .success-effect {
+            color: #6bcf7f;
+        }
+
+        .failure-effect {
+            color: #e74c3c;
+        }
+
+        /* 通知 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 5px;
+            border-left: 4px solid #4a90e2;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left-color: #6bcf7f;
+        }
+
+        .notification.warning {
+            border-left-color: #f39c12;
+        }
+
+        .notification.error {
+            border-left-color: #e74c3c;
+        }
+
+        /* ゲーム終了画面 */
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #4a90e2;
+            max-width: 400px;
+        }
+
+        .game-over h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            padding: 10px 30px;
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        /* アニメーション */
+        @keyframes summonEffect {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+
+        .summoning {
+            animation: summonEffect 1s ease-out;
+        }
+
+        /* チュートリアルオーバーレイ */
+        .tutorial-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+        .tutorial-card {
+            width: 90%;
+            max-width: 720px;
+            background: linear-gradient(135deg, #2c3e50, #1f2a36);
+            border: 2px solid #4a90e2;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .tutorial-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #ffd93d;
+        }
+        .tutorial-step {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        .tutorial-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+        .tutorial-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- ステータスバー -->
+    <div class="status-bar">
+        <div class="resource">
+            <div class="resource-label">魔力</div>
+            <div class="resource-value" id="mana">1000</div>
+        </div>
+        <div class="resource">
+            <div class="resource-label">技術P</div>
+            <div class="resource-value" id="tech">500</div>
+        </div>
+        <div class="resource">
+            <div class="resource-label">素材</div>
+            <div class="resource-value" id="materials">300</div>
+        </div>
+        <div class="resource">
+            <div class="resource-label">人材</div>
+            <div class="resource-value" id="personnel">0</div>
+        </div>
+        <div class="completion-gauge">
+            <div class="gauge-label">魔王殲滅兵器 完成度: <span id="completion-percent">0</span>%</div>
+            <div class="gauge-container">
+                <div class="gauge-fill" id="completion-gauge"></div>
+            </div>
+        </div>
+        <div class="elapsed-time">
+            <div class="resource-label">経過時間</div>
+            <div class="resource-value" id="elapsed">00:00</div>
+        </div>
+    </div>
+
+    <!-- 開発フィールド -->
+    <div class="development-field" id="development-field">
+        <div class="core-visual" id="core-visual">✨</div>
+        <div class="clicker" id="clicker">クリックで魔力+<span id="click-gain">1</span></div>
+        <div class="threat-overlay" id="threat"></div>
+        <div class="demon-soul" id="demon">👁️‍🗨️</div>
+    </div>
+
+    <!-- 操作パネル -->
+    <div class="control-panel">
+        <button class="control-btn summon" id="summon-btn">
+            異世界召喚
+            <div class="cost-info">魔力:100 素材:50</div>
+        </button>
+        <button class="control-btn summon" id="enhance-btn">
+            人間強化
+            <div class="cost-info">魔力:80 技術P:30</div>
+        </button>
+        <button class="control-btn machine" id="machine-btn">
+            機械モジュール
+            <div class="cost-info">技術P:100 素材:80</div>
+        </button>
+        <button class="control-btn magic" id="magic-btn">
+            魔法モジュール
+            <div class="cost-info">魔力:150 技術P:50</div>
+        </button>
+        <button class="control-btn" id="invest-btn">
+            資源投入
+            <div class="cost-info">スペースキーでも可</div>
+        </button>
+        <button class="control-btn" id="auto-btn">
+            自動開発
+            <div class="cost-info">数字キー1-3で効果</div>
+        </button>
+        <button class="control-btn" id="invest-human">
+            投資:人間 Lv.<span id="lv-human">0</span>
+            <div class="cost-info" id="cost-human">魔力:100</div>
+        </button>
+        <button class="control-btn" id="invest-machine">
+            投資:機械 Lv.<span id="lv-machine">0</span>
+            <div class="cost-info" id="cost-machine">技術P:80 素材:60</div>
+        </button>
+        <button class="control-btn" id="invest-magic">
+            投資:魔法 Lv.<span id="lv-magic">0</span>
+            <div class="cost-info" id="cost-magic">魔力:120 技術P:40</div>
+        </button>
+    </div>
+
+    <!-- 通知 -->
+    <div class="notification" id="notification"></div>
+
+    <!-- ゲーム終了画面 -->
+    <div class="game-over" id="game-over">
+        <div class="game-over-content">
+            <h2 id="game-over-title">開発完了！</h2>
+            <p id="game-over-message">魔王殲滅兵器の開発に成功しました！</p>
+            <button class="restart-btn" onclick="restartGame()">再開発</button>
+        </div>
+    </div>
+
+    <!-- チュートリアルオーバーレイ -->
+    <div class="tutorial-overlay" id="tutorial">
+        <div class="tutorial-card">
+            <div class="tutorial-title">女神の兵器開発 へようこそ</div>
+            <div class="tutorial-step">1) 画面中央の円をクリックして魔力を獲得します</div>
+            <div class="tutorial-step">2) 下部のボタンで投資/召喚/強化/機械/魔法を実行</div>
+            <div class="tutorial-step">3) スペースキーで魔力20を技術Pか素材にランダム転用</div>
+            <div class="tutorial-step">4) 自動開発はクリックの自動代行のみ。制限時間は3分</div>
+            <div class="tutorial-actions">
+                <button class="tutorial-btn" id="tutorial-close">開始する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ストーリーオーバーレイ -->
+    <div class="tutorial-overlay" id="story-overlay">
+        <div class="tutorial-card">
+            <div class="tutorial-title" id="story-title">物語</div>
+            <div id="story-content" style="line-height:1.7; white-space:pre-line"></div>
+            <div class="tutorial-actions">
+                <button class="tutorial-btn" id="story-next">続ける</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ゲーム状態
+        let gameState = {
+            mana: 1000,
+            tech: 500,
+            materials: 300,
+            personnel: 0,
+            completion: 0,
+            modules: [],
+            nextModuleId: 1,
+            gameRunning: true,
+            autoMode: false,
+            storyIndex: 0,
+            startedAt: Date.now(),
+            secondsElapsed: 0,
+            choices: { summon: 0, enhance: 0, machine: 0, magic: 0, invest: 0 },
+            clickGainBase: 1,
+            investLevels: { human: 0, machine: 0, magic: 0 }
+        };
+
+        // モジュールタイプ
+        const MODULE_TYPES = {
+            HUMAN: 'human',
+            MACHINE: 'machine',
+            MAGIC: 'magic'
+        };
+
+        // コスト設定
+        const COSTS = {
+            summon: { mana: 100, materials: 50 },
+            enhance: { mana: 80, tech: 30 },
+            machine: { tech: 100, materials: 80 },
+            magic: { mana: 150, tech: 50 }
+        };
+
+        // DOM要素
+        const elements = {
+            mana: document.getElementById('mana'),
+            tech: document.getElementById('tech'),
+            materials: document.getElementById('materials'),
+            personnel: document.getElementById('personnel'),
+            completion: document.getElementById('completion-percent'),
+            gauge: document.getElementById('completion-gauge'),
+            field: document.getElementById('development-field'),
+            notification: document.getElementById('notification'),
+            gameOver: document.getElementById('game-over'),
+            gameOverTitle: document.getElementById('game-over-title'),
+            gameOverMessage: document.getElementById('game-over-message'),
+            storyOverlay: document.getElementById('story-overlay'),
+            storyTitle: document.getElementById('story-title'),
+            storyContent: document.getElementById('story-content'),
+            clicker: document.getElementById('clicker'),
+            clickGain: document.getElementById('click-gain'),
+            coreVisual: document.getElementById('core-visual'),
+            lvHuman: document.getElementById('lv-human'),
+            lvMachine: document.getElementById('lv-machine'),
+            lvMagic: document.getElementById('lv-magic'),
+            costHuman: document.getElementById('cost-human'),
+            costMachine: document.getElementById('cost-machine'),
+            costMagic: document.getElementById('cost-magic'),
+            threat: document.getElementById('threat'),
+            demon: document.getElementById('demon')
+        };
+        // ストーリーデータ（仕様書より要約）
+        const STORY = [
+            {
+                title: '序章：女神の決意',
+                text: '前作で、魔王の時空干渉により勇者の転生が阻止された。\n女神は魔王殲滅兵器の開発に乗り出す。'
+            },
+            {
+                title: '研究開始',
+                text: '兵器の完成には、人材・機械・魔法、そして膨大な資源が必要だ。\nまずは人材を確保しよう（異世界召喚）。'
+            },
+            {
+                title: '技術革新の兆し',
+                text: '機械モジュールと魔法モジュールの相互作用で、予想外の進展が起きるかもしれない。'
+            },
+            {
+                title: '焦りと祈り',
+                text: '資源が厳しい。だが諦められない——この世界の未来のために。'
+            },
+            {
+                title: '完成へ',
+                text: '完成度が高まってきた。最後の仕上げに全力を注ごう。'
+            }
+        ];
+
+        function showStory(index) {
+            if (!STORY[index]) return;
+            gameState.storyIndex = index;
+            elements.storyTitle.textContent = STORY[index].title;
+            elements.storyContent.textContent = STORY[index].text;
+            elements.storyOverlay.style.display = 'flex';
+        }
+
+        function hideStory() {
+            elements.storyOverlay.style.display = 'none';
+        }
+
+
+        // 初期化
+        function init() {
+            updateDisplay();
+            setupEventListeners();
+            startGameLoop();
+            // 初回のみチュートリアル表示（簡略化: 毎回表示）
+            const tutorial = document.getElementById('tutorial');
+            if (tutorial) {
+                tutorial.style.display = 'flex';
+            }
+            // 導入ストーリーを表示
+            showStory(0);
+            updateInvestUI();
+            updateCoreVisual();
+        }
+
+        // イベントリスナー設定
+        function setupEventListeners() {
+            document.getElementById('summon-btn').addEventListener('click', () => summonHuman());
+            document.getElementById('enhance-btn').addEventListener('click', () => enhanceHuman());
+            document.getElementById('machine-btn').addEventListener('click', () => createMachine());
+            document.getElementById('magic-btn').addEventListener('click', () => createMagic());
+            document.getElementById('invest-btn').addEventListener('click', () => investResources());
+            document.getElementById('auto-btn').addEventListener('click', () => toggleAuto());
+
+            // チュートリアル閉じる
+            const closeBtn = document.getElementById('tutorial-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    const tutorial = document.getElementById('tutorial');
+                    if (tutorial) tutorial.style.display = 'none';
+                });
+            }
+
+            const storyNext = document.getElementById('story-next');
+            if (storyNext) {
+                storyNext.addEventListener('click', () => hideStory());
+            }
+
+            if (elements.clicker) {
+                elements.clicker.addEventListener('click', () => {
+                    const gain = getClickGain();
+                    gameState.mana += gain;
+                    elements.clickGain.textContent = gain;
+                    showEffect(elements.field.offsetWidth/2, elements.field.offsetHeight/2, `+${gain}魔力`);
+                    updateDisplay();
+                });
+            }
+
+            const investHumanBtn = document.getElementById('invest-human');
+            const investMachineBtn = document.getElementById('invest-machine');
+            const investMagicBtn = document.getElementById('invest-magic');
+            investHumanBtn?.addEventListener('click', () => invest('human'));
+            investMachineBtn?.addEventListener('click', () => invest('machine'));
+            investMagicBtn?.addEventListener('click', () => invest('magic'));
+
+            // キーボード操作（スペースのみ）
+            document.addEventListener('keydown', (e) => {
+                if (!gameState.gameRunning) return;
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    investResources();
+                }
+            });
+        }
+
+        // 異世界人間召喚
+        function summonHuman() {
+            gameState.choices.summon++;
+            if (!canAfford(COSTS.summon)) {
+                showNotification('資源が不足しています', 'error');
+                return;
+            }
+
+            spendResources(COSTS.summon);
+            
+            const successRate = Math.min(0.9, 0.5 + (gameState.personnel * 0.1));
+            if (Math.random() < successRate) {
+                gameState.personnel++;
+                createModule(MODULE_TYPES.HUMAN, getRandomPosition());
+                showNotification('異世界人間召喚成功！', 'success');
+                addProgress(3);
+            } else {
+                showNotification('召喚に失敗しました...', 'error');
+            }
+            
+            updateDisplay();
+        }
+
+        // 既存人間強化
+        function enhanceHuman() {
+            gameState.choices.enhance++;
+            if (gameState.personnel === 0) {
+                showNotification('強化する人材がいません', 'warning');
+                return;
+            }
+            
+            if (!canAfford(COSTS.enhance)) {
+                showNotification('資源が不足しています', 'error');
+                return;
+            }
+
+            spendResources(COSTS.enhance);
+            
+            if (Math.random() < 0.8) {
+                const humanModules = gameState.modules.filter(m => m.type === MODULE_TYPES.HUMAN);
+                if (humanModules.length > 0) {
+                    const module = humanModules[Math.floor(Math.random() * humanModules.length)];
+                    module.level = (module.level || 1) + 1;
+                    updateModuleDisplay(module);
+                    showNotification('人間強化成功！', 'success');
+                    addProgress(4);
+                }
+            } else {
+                gameState.personnel = Math.max(0, gameState.personnel - 1);
+                showNotification('強化に失敗しました...', 'error');
+            }
+            
+            updateDisplay();
+        }
+
+        // 機械モジュール作成
+        function createMachine() {
+            gameState.choices.machine++;
+            if (!canAfford(COSTS.machine)) {
+                showNotification('資源が不足しています', 'error');
+                return;
+            }
+
+            spendResources(COSTS.machine);
+            createModule(MODULE_TYPES.MACHINE, getRandomPosition());
+            showNotification('機械モジュール開発完了！', 'success');
+            addProgress(3);
+            updateDisplay();
+        }
+
+        // 魔法モジュール作成
+        function createMagic() {
+            gameState.choices.magic++;
+            if (!canAfford(COSTS.magic)) {
+                showNotification('資源が不足しています', 'error');
+                return;
+            }
+
+            spendResources(COSTS.magic);
+            createModule(MODULE_TYPES.MAGIC, getRandomPosition());
+            showNotification('魔法モジュール開発完了！', 'success');
+            addProgress(4);
+            updateDisplay();
+        }
+
+        // モジュール作成
+        function createModule(type, position) {
+            const module = {
+                id: gameState.nextModuleId++,
+                type: type,
+                x: position.x,
+                y: position.y,
+                level: initialLevelForType(type),
+                progress: 0,
+                working: false
+            };
+
+            gameState.modules.push(module);
+            
+            const element = document.createElement('div');
+            element.className = `module ${type} summoning`;
+            element.id = `module-${module.id}`;
+            element.style.left = `${position.x}px`;
+            element.style.top = `${position.y}px`;
+            
+            const progressBar = document.createElement('div');
+            progressBar.className = 'module-progress';
+            const progressFill = document.createElement('div');
+            progressFill.className = 'progress-fill';
+            progressBar.appendChild(progressFill);
+            element.appendChild(progressBar);
+            
+            updateModuleContent(element, module);
+            elements.field.appendChild(element);
+
+            // ドラッグ機能
+            makeModuleDraggable(element, module);
+        }
+
+        // 投資と連動した初期レベル決定
+        function initialLevelForType(type) {
+            if (type === MODULE_TYPES.HUMAN) return Math.max(1, gameState.investLevels.human);
+            if (type === MODULE_TYPES.MACHINE) return Math.max(1, gameState.investLevels.machine);
+            if (type === MODULE_TYPES.MAGIC) return Math.max(1, gameState.investLevels.magic);
+            return 1;
+        }
+
+        // モジュール内容更新
+        function updateModuleContent(element, module) {
+            const typeNames = {
+                [MODULE_TYPES.HUMAN]: '人間',
+                [MODULE_TYPES.MACHINE]: '機械',
+                [MODULE_TYPES.MAGIC]: '魔法'
+            };
+            
+            element.innerHTML = `
+                <div>${typeNames[module.type]}</div>
+                <div>Lv.${module.level}</div>
+                <div class="module-progress">
+                    <div class="progress-fill" style="width: ${module.progress}%"></div>
+                </div>
+            `;
+        }
+
+        // モジュール表示更新
+        function updateModuleDisplay(module) {
+            const element = document.getElementById(`module-${module.id}`);
+            if (element) {
+                updateModuleContent(element, module);
+            }
+        }
+
+        // ドラッグ機能
+        function makeModuleDraggable(element, module) {
+            let isDragging = false;
+            let startX, startY;
+
+            element.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - element.offsetLeft;
+                startY = e.clientY - element.offsetTop;
+                element.style.zIndex = '1000';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const rect = elements.field.getBoundingClientRect();
+                let newX = e.clientX - startX - rect.left;
+                let newY = e.clientY - startY - rect.top;
+                
+                // 境界チェック
+                newX = Math.max(0, Math.min(newX, elements.field.offsetWidth - 80));
+                newY = Math.max(0, Math.min(newY, elements.field.offsetHeight - 80));
+                
+                element.style.left = `${newX}px`;
+                element.style.top = `${newY}px`;
+                
+                module.x = newX;
+                module.y = newY;
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    element.style.zIndex = '';
+                }
+            });
+        }
+
+        // ランダム位置取得
+        function getRandomPosition() {
+            const fieldRect = elements.field.getBoundingClientRect();
+            return {
+                x: Math.random() * (fieldRect.width - 80),
+                y: Math.random() * (fieldRect.height - 80)
+            };
+        }
+
+        // 資源投入（スペース）：魔力20を技術Pまたは素材へランダム分配
+        function investResources() {
+            gameState.choices.invest++;
+            const spend = Math.min(20, gameState.mana);
+            if (spend === 0) {
+                showNotification('魔力が不足しています', 'error');
+                return;
+            }
+            gameState.mana -= spend;
+            if (Math.random() < 0.5) {
+                gameState.tech += spend;
+                showNotification(`魔力${spend}を技術Pに転用`, 'success');
+            } else {
+                gameState.materials += spend;
+                showNotification(`魔力${spend}を素材に転用`, 'success');
+            }
+            updateDisplay();
+        }
+
+        // 進捗追加
+        function addProgress(amount) {
+            const inc = Math.max(0, Math.floor(amount));
+            gameState.completion = Math.min(100, gameState.completion + inc);
+            // 進捗演出（整数表示）
+            const cx = elements.field.offsetWidth / 2;
+            const cy = elements.field.offsetHeight / 2;
+            if (inc > 0) showEffect(cx, cy, `+${inc}%`, 'success');
+            
+            // 物語進行の簡易トリガ（25/50/75/100%）
+            if (gameState.completion >= 25 && gameState.storyIndex < 1) showStory(1);
+            if (gameState.completion >= 50 && gameState.storyIndex < 2) showStory(2);
+            if (gameState.completion >= 75 && gameState.storyIndex < 3) showStory(3);
+
+            if (gameState.completion >= 100 && gameState.gameRunning) {
+                endGame(true);
+            }
+        }
+
+        // 自動開発切替
+        function toggleAuto() {
+            gameState.autoMode = !gameState.autoMode;
+            const btn = document.getElementById('auto-btn');
+            btn.textContent = gameState.autoMode ? '自動停止' : '自動開発';
+            btn.style.background = gameState.autoMode ? 
+                'linear-gradient(135deg, #e74c3c, #c0392b)' : 
+                'linear-gradient(135deg, #4a90e2, #357abd)';
+            
+            showNotification(gameState.autoMode ? '自動開発開始' : '自動開発停止', 'success');
+        }
+
+        // 特殊効果
+        function accelerateProgress() {
+            if (gameState.mana >= 50) {
+                gameState.mana -= 50;
+                addProgress(30);
+                showNotification('開発加速！', 'success');
+                updateDisplay();
+            }
+        }
+
+        function increaseSuccessRate() {
+            if (gameState.tech >= 30) {
+                gameState.tech -= 30;
+                // 次回の成功率を向上（実装簡略化のため即座に進捗追加）
+                addProgress(20);
+                showNotification('成功率上昇！', 'success');
+                updateDisplay();
+            }
+        }
+
+        function saveMaterials() {
+            if (gameState.completion > 10) {
+                gameState.materials += 20;
+                gameState.completion -= 5;
+                showNotification('素材節約モード', 'success');
+                updateDisplay();
+            }
+        }
+
+        // 資源チェック
+        function canAfford(cost) {
+            return (cost.mana || 0) <= gameState.mana &&
+                   (cost.tech || 0) <= gameState.tech &&
+                   (cost.materials || 0) <= gameState.materials;
+        }
+
+        // 資源消費
+        function spendResources(cost) {
+            gameState.mana -= cost.mana || 0;
+            gameState.tech -= cost.tech || 0;
+            gameState.materials -= cost.materials || 0;
+        }
+
+        // 表示更新
+        function updateDisplay() {
+            // 整数表示に統一
+            gameState.mana = Math.floor(gameState.mana);
+            gameState.tech = Math.floor(gameState.tech);
+            gameState.materials = Math.floor(gameState.materials);
+            elements.mana.textContent = Math.floor(gameState.mana);
+            elements.tech.textContent = Math.floor(gameState.tech);
+            elements.materials.textContent = Math.floor(gameState.materials);
+            elements.personnel.textContent = gameState.personnel;
+            elements.completion.textContent = Math.floor(gameState.completion);
+            elements.gauge.style.width = `${gameState.completion}%`;
+            const seconds = Math.max(0, Number(gameState.secondsElapsed) || 0);
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            const elapsed = document.getElementById('elapsed');
+            if (elapsed) elapsed.textContent = `${m}:${s}`;
+
+            // ボタン状態更新
+            updateButtonStates();
+            updateInvestUI();
+        }
+
+        // ボタン状態更新
+        function updateButtonStates() {
+            document.getElementById('summon-btn').disabled = !canAfford(COSTS.summon);
+            document.getElementById('enhance-btn').disabled = !canAfford(COSTS.enhance) || gameState.personnel === 0;
+            document.getElementById('machine-btn').disabled = !canAfford(COSTS.machine);
+            document.getElementById('magic-btn').disabled = !canAfford(COSTS.magic);
+        }
+
+        // 通知表示
+        function showNotification(message, type = 'info') {
+            elements.notification.textContent = message;
+            elements.notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                elements.notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // エフェクト表示
+        function showEffect(x, y, text, type = 'success') {
+            const effect = document.createElement('div');
+            effect.className = `effect ${type}-effect`;
+            effect.textContent = text;
+            effect.style.left = `${x}px`;
+            effect.style.top = `${y}px`;
+            
+            elements.field.appendChild(effect);
+            
+            setTimeout(() => {
+                elements.field.removeChild(effect);
+            }, 1000);
+        }
+
+        // ゲームループ
+        function startGameLoop() {
+            setInterval(() => {
+                if (!gameState.gameRunning) return;
+
+                // 資源回復
+                gameState.mana += 3;      // 調整：遅く
+                gameState.tech += 1;      // 調整：遅く
+                gameState.materials += 1; // 据え置き
+                gameState.secondsElapsed++;
+
+                // 投資効果：パッシブ収入
+                const l = gameState.investLevels;
+                gameState.mana += l.human * 0.5 + l.magic * 0.3;
+                gameState.tech += l.machine * 0.5 + l.magic * 0.2;
+                gameState.materials += l.machine * 0.4;
+
+                // 自動開発：クリック代行のみ
+                if (gameState.autoMode && Math.random() < 0.6) {
+                    const gain = getClickGain();
+                    gameState.mana += gain;
+                }
+
+                // モジュール作業進行
+                gameState.modules.forEach(module => {
+                    if (Math.random() < 0.15) { // 作業頻度を低下
+                        module.progress = Math.min(100, module.progress + 8); // 進捗量を低下
+                        const element = document.getElementById(`module-${module.id}`);
+                        if (element) {
+                            element.classList.add('working');
+                            setTimeout(() => element.classList.remove('working'), 500);
+                        }
+                        
+                        if (module.progress >= 100) {
+                            module.progress = 0;
+                            addProgress(4 * module.level); // 完成度上昇を調整
+                            showEffect(module.x + 40, module.y + 40, `+${5 * module.level}%`);
+                        }
+                        updateModuleDisplay(module);
+                    }
+                });
+
+                // ランダムイベント
+                if (Math.random() < 0.05) {
+                    triggerRandomEvent();
+                }
+
+                // 失敗条件チェック
+                if (gameState.mana <= 0 && gameState.tech <= 0 && gameState.materials <= 0) {
+                    endGame(false);
+                }
+
+                updateDisplay();
+                updateCoreVisual();
+                checkTimeLimit();
+            }, 1000);
+        }
+
+        // ランダムイベント
+        function triggerRandomEvent() {
+            const events = [
+                {
+                    name: '魔力結晶発見',
+                    effect: () => {
+                        gameState.mana += 100;
+                        showNotification('魔力結晶を発見！魔力+100', 'success');
+                    }
+                },
+                {
+                    name: '技術革新',
+                    effect: () => {
+                        gameState.tech += 80;
+                        showNotification('技術的ブレイクスルー！技術P+80', 'success');
+                    }
+                },
+                {
+                    name: '素材不足',
+                    effect: () => {
+                        gameState.materials = Math.max(0, gameState.materials - 30);
+                        showNotification('素材が劣化しました...素材-30', 'warning');
+                    }
+                },
+                {
+                    name: '偶然の発見',
+                    effect: () => {
+                        // 進捗は加算しない。代わりに資源ボーナスのみ付与
+                        gameState.mana += 30;
+                        gameState.tech += 15;
+                        showNotification('偶然の発見！魔力+30 技術P+15', 'success');
+                    }
+                }
+            ];
+
+            const event = events[Math.floor(Math.random() * events.length)];
+            event.effect();
+        }
+
+        // ゲーム終了
+        function endGame(success) {
+            gameState.gameRunning = false;
+            
+            if (success) {
+                elements.gameOverTitle.textContent = '開発完了！';
+                const ending = determineEnding();
+                elements.gameOverMessage.textContent = `${ending.name} が完成！\n${ending.story}`;
+            } else {
+                elements.gameOverTitle.textContent = '開発失敗...';
+                elements.gameOverMessage.textContent = '資源が枯渇し、開発を続行できません。魔王の脅威は続きます...';
+            }
+            
+            elements.gameOver.style.display = 'flex';
+        }
+
+        // 10分経過でタイムオーバー
+        function checkTimeLimit() {
+            // 時間制限：5分=300秒
+            const limit = 180;
+            if (gameState.secondsElapsed >= limit && gameState.gameRunning) {
+                elements.gameOverTitle.textContent = 'タイムオーバー';
+                elements.gameOverMessage.textContent = '魔王に気配を察知され、研究施設が露見した……。女神の兵器開発は未完成のまま失敗に終わった。次の時間線で、より迅速に開発を進めよう。';
+                elements.gameOver.style.display = 'flex';
+                gameState.gameRunning = false;
+            }
+            // 残り時間に応じた脅威演出
+            const remain = Math.max(0, limit - gameState.secondsElapsed);
+            const t = 1 - (remain / limit); // 0→1
+            if (elements.threat) elements.threat.style.opacity = (t * 0.9).toFixed(2);
+            if (elements.demon) {
+                const shift = Math.floor(200 - 200 * t); // 200px→0px
+                elements.demon.style.transform = `translateY(-50%) translateX(-${shift}px)`;
+            }
+        }
+
+        // 分岐エンディング判定
+        function determineEnding() {
+            const c = gameState.choices;
+            // 重み付けでビルドタイプを決定
+            const scores = [
+                { key: 'human', score: c.summon + c.enhance * 1.5, name: '聖遺・英雄増幅砲', story: '数多の人材が力を合わせ、英雄の意志を結晶化。魔王の精神を崩し去る聖なる波動を放つ。' },
+                { key: 'machine', score: c.machine * 2 + c.invest * 0.5, name: '機神・終末演算要塞', story: '機械の叡智が極まった巨大要塞。無尽の演算で魔王の行動を先読みし、致命の一撃を叩き込む。' },
+                { key: 'magic', score: c.magic * 2 + c.summon * 0.5, name: '神託・時空連結魔導核', story: '時空を束ねる魔導核。女神の祈りと共鳴し、魔王の時間線そのものを書き換える。' },
+                { key: 'balanced', score: (c.summon + c.enhance + c.machine + c.magic + c.invest) / 2, name: '統合兵装・創世アーク', story: '人・機械・魔法・資源投資の全てが高水準で統合された究極兵器。あらゆる未来に対して勝利を保証する。' }
+            ];
+            scores.sort((a,b) => b.score - a.score);
+            const top = scores[0];
+            // バランス型優先条件：全カテゴリが一定以上ならバランスへ
+            const minAll = Math.min(c.summon + c.enhance, c.machine, c.magic, c.invest);
+            if (minAll >= 2) {
+                return scores.find(s => s.key === 'balanced');
+            }
+            return top;
+        }
+
+        // クリック収入の算出（投資レベルで増加）
+        function getClickGain() {
+            const l = gameState.investLevels;
+            return Math.floor(gameState.clickGainBase + l.human * 1 + l.machine * 0.5 + l.magic * 0.8);
+        }
+
+        // 投資コストとUI更新
+        function updateInvestUI() {
+            const l = gameState.investLevels;
+            elements.lvHuman.textContent = l.human;
+            elements.lvMachine.textContent = l.machine;
+            elements.lvMagic.textContent = l.magic;
+            elements.costHuman.textContent = `魔力:${100 + l.human * 60}`;
+            elements.costMachine.textContent = `技術P:${80 + l.machine * 50} 素材:${60 + l.machine * 40}`;
+            elements.costMagic.textContent = `魔力:${120 + l.magic * 70} 技術P:${40 + l.magic * 40}`;
+            elements.clickGain.textContent = getClickGain();
+        }
+
+        // 投資処理と効果
+        function invest(kind) {
+            const l = gameState.investLevels;
+            if (kind === 'human') {
+                const cost = 100 + l.human * 60;
+                if (gameState.mana < cost) return showNotification('魔力が不足しています', 'error');
+                gameState.mana -= cost;
+                l.human++;
+                addProgress(2);
+                // 既存の人間モジュールにも反映
+                gameState.modules.filter(m => m.type === MODULE_TYPES.HUMAN).forEach(m => { m.level = Math.max(m.level, l.human); updateModuleDisplay(m); });
+            } else if (kind === 'machine') {
+                const costT = 80 + l.machine * 50;
+                const costM = 60 + l.machine * 40;
+                if (gameState.tech < costT || gameState.materials < costM) return showNotification('資源が不足しています', 'error');
+                gameState.tech -= costT;
+                gameState.materials -= costM;
+                l.machine++;
+                addProgress(2.5);
+                // 既存の機械モジュールにも反映
+                gameState.modules.filter(m => m.type === MODULE_TYPES.MACHINE).forEach(m => { m.level = Math.max(m.level, l.machine); updateModuleDisplay(m); });
+            } else if (kind === 'magic') {
+                const costMana = 120 + l.magic * 70;
+                const costTech = 40 + l.magic * 40;
+                if (gameState.mana < costMana || gameState.tech < costTech) return showNotification('資源が不足しています', 'error');
+                gameState.mana -= costMana;
+                gameState.tech -= costTech;
+                l.magic++;
+                addProgress(3);
+                // 既存の魔法モジュールにも反映
+                gameState.modules.filter(m => m.type === MODULE_TYPES.MAGIC).forEach(m => { m.level = Math.max(m.level, l.magic); updateModuleDisplay(m); });
+            }
+            updateInvestUI();
+            updateCoreVisual();
+            updateDisplay();
+        }
+
+        // 中央ビジュアルの進化（合計レベルで段階的に豪華に）
+        function updateCoreVisual() {
+            const totalLv = gameState.investLevels.human + gameState.investLevels.machine + gameState.investLevels.magic;
+            const el = elements.coreVisual;
+            if (!el) return;
+            if (totalLv < 3) {
+                el.textContent = '✨';
+                el.style.fontSize = '48px';
+            } else if (totalLv < 6) {
+                el.textContent = '🌟';
+                el.style.fontSize = '64px';
+            } else if (totalLv < 9) {
+                el.textContent = '💫';
+                el.style.fontSize = '80px';
+            } else {
+                el.textContent = '🛡️⚡';
+                el.style.fontSize = '88px';
+            }
+        }
+
+        // ゲーム再開
+        function restartGame() {
+            gameState = {
+                mana: 1000,
+                tech: 500,
+                materials: 300,
+                personnel: 0,
+                completion: 0,
+                modules: [],
+                nextModuleId: 1,
+                gameRunning: true,
+                autoMode: false,
+                storyIndex: 0,
+                startedAt: Date.now(),
+                secondsElapsed: 0,
+                choices: { summon: 0, enhance: 0, machine: 0, magic: 0, invest: 0 },
+                clickGainBase: 1,
+                investLevels: { human: 0, machine: 0, magic: 0 }
+            };
+            
+            elements.field.innerHTML = '';
+            // 再生成
+            const core = document.createElement('div');
+            core.className = 'core-visual';
+            core.id = 'core-visual';
+            core.textContent = '✨';
+            elements.field.appendChild(core);
+            elements.coreVisual = core;
+
+            const clicker = document.createElement('div');
+            clicker.className = 'clicker';
+            clicker.id = 'clicker';
+            clicker.innerHTML = 'クリックで魔力+<span id="click-gain">1</span>';
+            elements.field.appendChild(clicker);
+            elements.clicker = clicker;
+            elements.clickGain = document.getElementById('click-gain');
+
+            elements.gameOver.style.display = 'none';
+            document.getElementById('auto-btn').textContent = '自動開発';
+            document.getElementById('auto-btn').style.background = 'linear-gradient(135deg, #4a90e2, #357abd)';
+            
+                // クリックイベント再バインド
+            elements.clicker.addEventListener('click', () => {
+                const gain = getClickGain();
+                gameState.mana += gain;
+                elements.clickGain.textContent = gain;
+                showEffect(elements.field.offsetWidth/2, elements.field.offsetHeight/2, `+${gain}魔力`);
+                updateDisplay();
+            });
+
+            updateInvestUI();
+            updateCoreVisual();
+                checkTimeLimit();
+            updateDisplay();
+        }
+
+        // ゲーム開始
+        init();
+    </script>
+</body>
+</html>
