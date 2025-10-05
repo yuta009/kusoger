@@ -12,11 +12,13 @@
         }
 
         body {
-            font-family: 'MS Gothic', monospace;
+            font-family: 'MS Gothic', 'Consolas', 'Courier New', monospace;
             background: linear-gradient(135deg, #000033, #1a0066, #000011);
             color: #fff;
             overflow: hidden;
             height: 100vh;
+            font-size: 16px;
+            line-height: 1.4;
         }
 
         .game-container {
@@ -29,12 +31,12 @@
         /* ヘッダー */
         .header {
             background: rgba(0, 0, 0, 0.9);
-            padding: 10px 20px;
+            padding: 15px 20px;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
             gap: 15px;
             border-bottom: 2px solid #6600cc;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         .status {
@@ -47,21 +49,22 @@
 
         .status-value {
             display: block;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #ffff66;
+            text-shadow: 0 0 5px rgba(255, 255, 102, 0.5);
         }
 
         /* 進行状況表示 */
         .progress-panel {
             background: rgba(0, 0, 0, 0.8);
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-bottom: 2px solid #6600cc;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
-            color: #ccc;
+            font-size: 16px;
+            color: #ddd;
         }
 
         .progress-item {
@@ -71,12 +74,13 @@
         }
 
         .progress-item span:first-child {
-            color: #aaa;
+            color: #bbb;
         }
 
         .progress-item span:last-child {
             color: #ffff66;
             font-weight: bold;
+            text-shadow: 0 0 3px rgba(255, 255, 102, 0.3);
         }
 
         /* メインフィールド */
@@ -91,7 +95,7 @@
         .enemy {
             position: absolute;
             width: 80px;
-            height: 60px;
+            height: 80px;
             background: #333;
             border: 2px solid #666;
             border-radius: 10px;
@@ -99,12 +103,15 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 14px;
             transition: all 0.3s ease;
             cursor: pointer;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            padding: 4px;
+            box-sizing: border-box;
+            z-index: 5;
         }
 
         .enemy.self-doubt {
@@ -126,14 +133,14 @@
             background: url('Gemini_Generated_Image_p6f68pp6f68pp6f6.png') center/cover, linear-gradient(45deg, #8b0000, #ff6347);
             border-color: #ff6347;
             width: 100px;
-            height: 80px;
+            height: 100px;
         }
 
         .enemy.boss {
             background: url('Gemini_Generated_Image_2pm1pe2pm1pe2pm1.png') center/cover, linear-gradient(45deg, #4a0e4e, #ff0066);
             border-color: #ff0066;
             width: 120px;
-            height: 100px;
+            height: 120px;
             box-shadow: 0 0 20px #ff0066;
         }
 
@@ -141,26 +148,43 @@
             background: url('Gemini_Generated_Image_phlwrtphlwrtphlw.png') center/cover, linear-gradient(45deg, #000, #8b0000, #000);
             border-color: #ff0000;
             width: 150px;
-            height: 120px;
+            height: 150px;
             box-shadow: 0 0 30px #ff0000;
         }
 
         .enemy-name {
-            font-size: 10px;
+            font-size: 12px;
             margin-bottom: 2px;
-            color: #ccc;
+            color: #ddd;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
         }
 
         .enemy-word {
             font-weight: bold;
             color: #fff;
             font-size: 14px;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+            word-break: break-all;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .enemy-meaning {
+            font-size: 10px;
+            color: #ffcc66;
+            margin-bottom: 1px;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+            font-style: italic;
+            word-break: break-all;
+            text-align: center;
+            line-height: 1.1;
         }
 
         .enemy-hp {
-            font-size: 10px;
+            font-size: 12px;
             color: #ff6666;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
         }
 
         .hp-bar {
@@ -193,13 +217,14 @@
 
         #word-input {
             flex: 1;
-            padding: 12px;
-            font-size: 18px;
-            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.15);
             border: 2px solid #6600cc;
             border-radius: 5px;
             color: #fff;
-            font-family: 'MS Gothic', monospace;
+            font-family: 'MS Gothic', 'Consolas', 'Courier New', monospace;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
         }
 
         #word-input:focus {
@@ -209,15 +234,17 @@
         }
 
         .btn {
-            padding: 12px 20px;
+            padding: 15px 20px;
             background: linear-gradient(45deg, #6600cc, #9900ff);
             border: none;
             border-radius: 5px;
             color: #fff;
-            font-size: 14px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-family: 'MS Gothic', monospace;
+            font-family: 'MS Gothic', 'Consolas', 'Courier New', monospace;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
         }
 
         .btn:hover {
@@ -245,14 +272,15 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            width: 250px;
-            height: 150px;
-            background: rgba(0, 0, 0, 0.8);
+            width: 280px;
+            height: 180px;
+            background: rgba(0, 0, 0, 0.85);
             border: 1px solid #6600cc;
             border-radius: 5px;
-            padding: 10px;
-            font-size: 12px;
+            padding: 12px;
+            font-size: 14px;
             overflow-y: auto;
+            line-height: 1.4;
         }
 
         .log-entry {
@@ -357,8 +385,8 @@
         }
 
         @keyframes moveRight {
-            0% { left: -120px; }
-            100% { left: calc(100vw - 80px); } /* 画面外に出ないようにさらに調整 */
+            0% { left: -150px; }
+            100% { left: calc(100vw + 50px); } /* 画面外に出るように調整 */
         }
 
         /* レスポンシブ対応 */
@@ -386,13 +414,18 @@
             }
 
             .enemy {
-                width: 60px;
-                height: 45px;
-                font-size: 10px;
+                width: 70px;
+                height: 70px;
+                font-size: 12px;
+                padding: 3px;
             }
 
             .enemy-word {
                 font-size: 12px;
+            }
+
+            .enemy-meaning {
+                font-size: 9px;
             }
         }
 
@@ -425,10 +458,11 @@
         }
 
         .story-text {
-            font-size: 16px;
+            font-size: 18px;
             line-height: 1.6;
             margin-bottom: 20px;
-            color: #ccc;
+            color: #ddd;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
@@ -547,29 +581,49 @@
                     'doubt', 'uncertain', 'worry', 'question', 'hesitate', 'confuse', 'wonder', 'suspect',
                     'anxiety', 'nervous', 'insecure', 'unclear', 'confused', 'puzzled', 'bewildered',
                     'skeptical', 'suspicious', 'distrust', 'mistrust', 'apprehensive', 'uneasy', 'restless'
-                ], type: 'self-doubt' },
+                ], type: 'self-doubt', meanings: [
+                    '疑い', '不確実', '心配', '疑問', 'ためらう', '混乱', '不思議', '疑う',
+                    '不安', '神経質', '不安定', '不明確', '混乱した', '困惑', '当惑',
+                    '懐疑的', '疑わしい', '不信', '疑念', '心配', '不安', '落ち着かない'
+                ] },
                 { name: '怠惰', hp: 1, words: [
                     'lazy', 'tired', 'slow', 'rest', 'sleep', 'sloth', 'idle', 'inactive', 'passive',
                     'lethargic', 'sluggish', 'drowsy', 'weary', 'exhausted', 'fatigued', 'drained',
                     'listless', 'indolent', 'procrastinate', 'delay', 'postpone', 'hesitate', 'reluctant'
-                ], type: 'laziness' }
+                ], type: 'laziness', meanings: [
+                    '怠惰', '疲れた', '遅い', '休息', '睡眠', '怠惰', '怠惰', '非活動', '受動的',
+                    '無気力', '鈍い', '眠い', '疲れた', '疲弊', '疲労', '消耗',
+                    '無気力', '怠惰', '先延ばし', '遅延', '延期', 'ためらう', '嫌がる'
+                ] }
             ],
             2: [
                 { name: '自己疑念', hp: 1, words: [
                     'doubt', 'uncertain', 'worry', 'question', 'hesitate', 'confuse', 'wonder', 'suspect',
                     'anxiety', 'nervous', 'insecure', 'unclear', 'confused', 'puzzled', 'bewildered',
                     'skeptical', 'suspicious', 'distrust', 'mistrust', 'apprehensive', 'uneasy', 'restless'
-                ], type: 'self-doubt' },
+                ], type: 'self-doubt', meanings: [
+                    '疑い', '不確実', '心配', '疑問', 'ためらう', '混乱', '不思議', '疑う',
+                    '不安', '神経質', '不安定', '不明確', '混乱した', '困惑', '当惑',
+                    '懐疑的', '疑わしい', '不信', '疑念', '心配', '不安', '落ち着かない'
+                ] },
                 { name: '怠惰', hp: 1, words: [
                     'lazy', 'tired', 'slow', 'rest', 'sleep', 'sloth', 'idle', 'inactive', 'passive',
                     'lethargic', 'sluggish', 'drowsy', 'weary', 'exhausted', 'fatigued', 'drained',
                     'listless', 'indolent', 'procrastinate', 'delay', 'postpone', 'hesitate', 'reluctant'
-                ], type: 'laziness' },
+                ], type: 'laziness', meanings: [
+                    '怠惰', '疲れた', '遅い', '休息', '睡眠', '怠惰', '怠惰', '非活動', '受動的',
+                    '無気力', '鈍い', '眠い', '疲れた', '疲弊', '疲労', '消耗',
+                    '無気力', '怠惰', '先延ばし', '遅延', '延期', 'ためらう', '嫌がる'
+                ] },
                 { name: '過去の後悔', hp: 1, words: [
                     'regret', 'mistake', 'past', 'sorrow', 'remorse', 'guilt', 'shame', 'blame',
                     'fault', 'error', 'wrong', 'sin', 'transgress', 'violate', 'betray', 'abandon',
                     'forsake', 'reject', 'deny', 'ignore', 'neglect', 'overlook', 'disappoint'
-                ], type: 'regret' }
+                ], type: 'regret', meanings: [
+                    '後悔', '間違い', '過去', '悲しみ', '悔恨', '罪悪感', '恥', '非難',
+                    '過ち', '誤り', '間違い', '罪', '違反', '侵害', '裏切り', '放棄',
+                    '見捨てる', '拒絶', '否定', '無視', '怠慢', '見落とし', '失望'
+                ] }
             ],
             3: [
                 { name: '恐怖', hp: 2, words: [
@@ -577,7 +631,12 @@
                     'dread', 'anxiety', 'worry', 'concern', 'apprehension', 'trepidation', 'alarm',
                     'distress', 'anguish', 'agony', 'torment', 'suffering', 'pain', 'hurt', 'wound',
                     'trauma', 'shock', 'surprise', 'startle', 'fright', 'scare', 'threaten', 'menace'
-                ], type: 'fear' }
+                ], type: 'fear', meanings: [
+                    '恐怖', '恐怖', 'パニック', '恐れている', '怖がっている', '怯えている', '恐怖', '恐怖',
+                    '恐れ', '不安', '心配', '懸念', '不安', '恐れ', '警報',
+                    '苦痛', '苦悩', '苦痛', '苦痛', '苦しみ', '痛み', '傷つく', '傷',
+                    'トラウマ', 'ショック', '驚き', '驚かす', '恐怖', '怖がらせる', '脅す', '脅威'
+                ] }
             ],
             5: [
                 { name: '怒りの残響', hp: 3, words: [
@@ -585,7 +644,12 @@
                     'aggressive', 'violent', 'fierce', 'savage', 'brutal', 'cruel', 'harsh', 'severe',
                     'intense', 'passionate', 'furious', 'enraged', 'infuriated', 'outraged', 'indignant',
                     'irritated', 'annoyed', 'frustrated', 'exasperated', 'provoked', 'incited', 'stirred'
-                ], type: 'boss' }
+                ], type: 'boss', meanings: [
+                    '怒り', '激怒', '激怒', '怒り', '憎しみ', '憎む', '憤る', '苦い', '敵対的',
+                    '攻撃的', '暴力的', '激しい', '野蛮', '残酷', '残酷', '厳しい', '深刻',
+                    '激しい', '情熱的', '激怒', '怒り狂う', '激怒', '憤慨', '憤慨',
+                    'イライラ', 'うんざり', 'フラストレーション', '激怒', '挑発', '扇動', 'かき混ぜる'
+                ] }
             ],
             10: [
                 { name: '内なる影・王', hp: 5, words: [
@@ -594,7 +658,13 @@
                     'collapse', 'fall', 'decay', 'corruption', 'evil', 'malice', 'spite', 'venom',
                     'poison', 'toxin', 'plague', 'pestilence', 'curse', 'bane', 'scourge', 'affliction',
                     'torment', 'agony', 'suffering', 'misery', 'woe', 'grief', 'sorrow', 'anguish'
-                ], type: 'final-boss' }
+                ], type: 'final-boss', meanings: [
+                    '影', '闇', '絶望', '破壊', '忘却', '虚無', '空虚',
+                    '無', '深淵', '裂け目', '穴', '地獄', '破滅', '運命', '廃墟',
+                    '崩壊', '落下', '腐敗', '堕落', '悪', '悪意', '意地悪', '毒',
+                    '毒', '毒素', '疫病', '疫病', '呪い', '災い', '災い', '苦痛',
+                    '苦痛', '苦痛', '苦しみ', '悲惨', '悲しみ', '悲しみ', '悲しみ', '苦悩'
+                ] }
             ]
         };
 
@@ -656,13 +726,16 @@
 
         // 敵生成
         function createEnemy(enemyData) {
+            const wordIndex = Math.floor(Math.random() * enemyData.words.length);
             const enemy = {
                 ...enemyData,
                 id: Date.now() + Math.random(),
                 maxHp: enemyData.hp,
-                currentWord: enemyData.words[Math.floor(Math.random() * enemyData.words.length)],
+                currentWord: enemyData.words[wordIndex],
+                currentMeaning: enemyData.meanings ? enemyData.meanings[wordIndex] : '',
                 element: null,
-                words: [...enemyData.words] // 単語リストをコピー
+                words: [...enemyData.words], // 単語リストをコピー
+                meanings: enemyData.meanings ? [...enemyData.meanings] : [] // 意味リストをコピー
             };
             
             gameState.enemies.push(enemy);
@@ -684,25 +757,24 @@
             
             enemyEl.className = `enemy ${enemy.type} ${speedClass}`;
             enemyEl.id = `enemy-${enemy.id}`;
-            // 出現位置を中央に寄せて調整（画面の中央付近）
-            const screenHeight = window.innerHeight;
-            const headerHeight = 80; // ヘッダーの高さ
-            const inputAreaHeight = 120; // 入力エリアの高さ
-            const availableHeight = screenHeight - headerHeight - inputAreaHeight;
-            
+            // 出現位置を中央に寄せて調整（main-field内に限定）
+            const mainField = document.getElementById('main-field');
+            const mainRect = mainField.getBoundingClientRect();
+
             // 敵のサイズに応じた高さを取得
-            let enemyHeight = 60; // デフォルト
-            if (enemy.type === 'fear') enemyHeight = 80;
-            if (enemy.type === 'boss') enemyHeight = 100;
-            if (enemy.type === 'final-boss') enemyHeight = 120;
-            
-            const minTop = headerHeight + 20; // ヘッダーの下に余裕を持たせる
-            const maxTop = Math.max(minTop, availableHeight - enemyHeight - 20); // 下端にも余裕を持たせる
+            let enemyHeight = 80; // デフォルト
+            if (enemy.type === 'fear') enemyHeight = 100;
+            if (enemy.type === 'boss') enemyHeight = 120;
+            if (enemy.type === 'final-boss') enemyHeight = 150;
+
+            const minTop = 10; // フィールド内の上側余白
+            const maxTop = Math.max(minTop, mainRect.height - enemyHeight - 10);
             enemyEl.style.top = Math.random() * (maxTop - minTop) + minTop + 'px';
             
             enemyEl.innerHTML = `
                 <div class="enemy-name">${enemy.name}</div>
                 <div class="enemy-word">${enemy.currentWord}</div>
+                <div class="enemy-meaning">${enemy.currentMeaning}</div>
                 <div class="hp-bar">
                     <div class="hp-fill" style="width: 100%"></div>
                 </div>
@@ -758,7 +830,7 @@
             const targetEnemy = gameState.enemies.find(enemy => enemy.currentWord === gameState.currentInput);
             if (targetEnemy && gameState.currentInput.length > 0) {
                 // 自動攻撃実行
-                const comboMultiplier = 1 + gameState.combo * 0.2;
+                const comboMultiplier = 1 + gameState.combo * 0.1;
                 const damage = Math.floor(gameState.typePower * comboMultiplier);
                 dealDamage(targetEnemy, damage);
                 gameState.combo++;
@@ -811,10 +883,15 @@
                 killEnemy(enemy);
             } else {
                 // 敵が生きている場合、新しい単語を設定
-                const newWord = enemy.words[Math.floor(Math.random() * enemy.words.length)];
+                const wordIndex = Math.floor(Math.random() * enemy.words.length);
+                const newWord = enemy.words[wordIndex];
+                const newMeaning = enemy.meanings[wordIndex];
                 enemy.currentWord = newWord;
+                enemy.currentMeaning = newMeaning;
                 const wordElement = enemy.element.querySelector('.enemy-word');
+                const meaningElement = enemy.element.querySelector('.enemy-meaning');
                 wordElement.textContent = newWord;
+                meaningElement.textContent = newMeaning;
             }
         }
 
@@ -919,7 +996,7 @@
             gameState.trainingPoints = 100;
             gameState.fragments = 0;
             gameState.currentWave = 1;
-            gameState.typePower = 10;
+            gameState.typePower = 2;
             gameState.meditationLevel = 0;
             gameState.gratitudeLevel = 0;
             gameState.awakeningLevel = 0;
@@ -966,7 +1043,7 @@
             gameState.trainingPoints = 100;
             gameState.fragments = 0;
             gameState.currentWave = 1;
-            gameState.typePower = 10;
+            gameState.typePower = 2;
             gameState.meditationLevel = 0;
             gameState.gratitudeLevel = 0;
             gameState.awakeningLevel = 0;
