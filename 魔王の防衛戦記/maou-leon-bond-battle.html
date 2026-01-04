@@ -26,13 +26,15 @@
         }
 
         #gameContainer {
-            width: 1200px;
-            height: 800px;
             position: relative;
             background: black;
             border: 4px solid #A088FF;
             box-shadow: 0 0 50px rgba(160, 136, 255, 0.3);
             overflow: hidden;
+            /* アスペクト比を維持しながら画面サイズに合わせる */
+            aspect-ratio: 1200 / 800;
+            width: min(1200px, 100vw);
+            height: min(800px, 100vh);
         }
 
         #gameCanvas {
@@ -144,11 +146,13 @@
             background: rgba(17, 8, 31, 0.85);
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             z-index: 20;
             transition: opacity 0.5s;
             padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .hidden {
@@ -157,9 +161,10 @@
         }
 
         .logo-img {
-            max-width: 500px;
-            max-height: 180px;
-            margin-bottom: 20px;
+            max-width: min(500px, 80vw);
+            max-height: min(180px, 20vh);
+            margin-bottom: 10px;
+            margin-top: 10px;
             width: auto;
             filter: drop-shadow(0 0 20px rgba(160, 136, 255, 0.6));
         }
@@ -171,13 +176,15 @@
         }
 
         .game-btn {
-            width: 160px;
-            height: 50px;
+            width: min(160px, 30vw);
+            height: min(50px, 8vh);
+            min-width: 120px;
+            min-height: 40px;
             background: linear-gradient(180deg, #A088FF 0%, #5544DD 100%);
             border: 2px solid #C5A9FF;
             border-radius: 25px;
             color: white;
-            font-size: 18px;
+            font-size: clamp(14px, 2.5vw, 18px);
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.1s, box-shadow 0.1s;
@@ -198,16 +205,16 @@
         }
 
         .story-text {
-            max-width: 600px;
-            margin-bottom: 20px;
+            max-width: min(600px, 90vw);
+            margin-bottom: 15px;
             text-align: center;
             line-height: 1.4;
             color: #eee;
             background: rgba(0, 0, 0, 0.5);
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             border: 1px solid #553377;
-            font-size: 14px;
+            font-size: clamp(11px, 2vw, 14px);
         }
 
         #loadingScreen {
@@ -276,35 +283,35 @@
                 [A] 必殺技（ハードモードのみ、6人全員リンク時、全弾幕破壊、使用回数3回）
             </div>
 
-            <div class="story-text" style="margin-top: 10px; max-width: 700px; font-size: 12px;">
+            <div class="story-text" style="margin-top: 10px; max-width: min(700px, 90vw); font-size: clamp(10px, 1.8vw, 12px);">
                 <strong style="color: #C5A9FF;">仲間の能力：</strong><br>
-                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px;">
                     <div style="text-align: center;">
-                        <img src="picture/sol1_nom.png" style="width: 32px; height: 32px; image-rendering: pixelated;" alt="Warrior">
-                        <div style="color: #FFE7FF; font-size: 11px;">Warrior<br>攻撃+20%</div>
+                        <img src="picture/sol1_nom.png" style="width: min(32px, 6vw); height: min(32px, 6vw); image-rendering: pixelated;" alt="Warrior">
+                        <div style="color: #FFE7FF; font-size: clamp(9px, 1.5vw, 11px);">Warrior<br>攻撃+20%</div>
                     </div>
                     <div style="text-align: center;">
-                        <img src="picture/sol2_nom.png" style="width: 32px; height: 32px; image-rendering: pixelated;" alt="Healer">
-                        <div style="color: #A0FFA0; font-size: 11px;">Healer<br>回復/秒</div>
+                        <img src="picture/sol2_nom.png" style="width: min(32px, 6vw); height: min(32px, 6vw); image-rendering: pixelated;" alt="Healer">
+                        <div style="color: #A0FFA0; font-size: clamp(9px, 1.5vw, 11px);">Healer<br>回復/秒</div>
                     </div>
                     <div style="text-align: center;">
-                        <img src="picture/sol3_nom.png" style="width: 32px; height: 32px; image-rendering: pixelated;" alt="Tank">
-                        <div style="color: #FFA0A0; font-size: 11px;">Tank<br>防御+15%</div>
+                        <img src="picture/sol3_nom.png" style="width: min(32px, 6vw); height: min(32px, 6vw); image-rendering: pixelated;" alt="Tank">
+                        <div style="color: #FFA0A0; font-size: clamp(9px, 1.5vw, 11px);">Tank<br>防御+15%</div>
                     </div>
                     <div style="text-align: center;">
-                        <img src="picture/sol4_nom.png" style="width: 32px; height: 32px; image-rendering: pixelated;" alt="Speed">
-                        <div style="color: #A0A0FF; font-size: 11px;">Speed<br>速度+30%</div>
+                        <img src="picture/sol4_nom.png" style="width: min(32px, 6vw); height: min(32px, 6vw); image-rendering: pixelated;" alt="Speed">
+                        <div style="color: #A0A0FF; font-size: clamp(9px, 1.5vw, 11px);">Speed<br>速度+30%</div>
                     </div>
                     <div style="text-align: center;">
-                        <img src="picture/sol5_nom.png" style="width: 32px; height: 32px; image-rendering: pixelated;" alt="Mage">
-                        <div style="color: #FFA0FF; font-size: 11px;">Mage<br>攻撃頻度+</div>
+                        <img src="picture/sol5_nom.png" style="width: min(32px, 6vw); height: min(32px, 6vw); image-rendering: pixelated;" alt="Mage">
+                        <div style="color: #FFA0FF; font-size: clamp(9px, 1.5vw, 11px);">Mage<br>攻撃頻度+</div>
                     </div>
                     <div style="text-align: center;">
-                        <img src="picture/sol6_nom.png" style="width: 32px; height: 32px; image-rendering: pixelated;" alt="Guard">
-                        <div style="color: #FFFFA0; font-size: 11px;">Guard<br>軽減20%</div>
+                        <img src="picture/sol6_nom.png" style="width: min(32px, 6vw); height: min(32px, 6vw); image-rendering: pixelated;" alt="Guard">
+                        <div style="color: #FFFFA0; font-size: clamp(9px, 1.5vw, 11px);">Guard<br>軽減20%</div>
                     </div>
                 </div>
-                <div style="margin-top: 10px; font-size: 11px; color: #FFE7FF;">
+                <div style="margin-top: 10px; font-size: clamp(9px, 1.5vw, 11px); color: #FFE7FF;">
                     ※リンク時のみ仲間はダメージを受けます
                 </div>
             </div>
@@ -313,20 +320,20 @@
                 <button class="game-btn" onclick="game.showHelp()">遊び方・詳細</button>
             </div>
             
-            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
-                <div style="color: #C5A9FF; font-size: 14px; margin-bottom: 5px;">難易度選択</div>
+            <div style="margin-top: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
+                <div style="color: #C5A9FF; font-size: clamp(12px, 2vw, 14px); margin-bottom: 5px;">難易度選択</div>
                 <div class="btn-container">
-                    <button class="game-btn" onclick="game.setDifficulty('normal'); game.start();" style="width: 140px;">NORMAL</button>
-                    <button class="game-btn" onclick="game.setDifficulty('hard'); game.start();" style="width: 140px; background: linear-gradient(180deg, #FF6B6B 0%, #CC0000 100%);">HARD</button>
+                    <button class="game-btn" onclick="game.setDifficulty('normal'); game.start();" style="width: min(140px, 25vw); min-width: 100px;">NORMAL</button>
+                    <button class="game-btn" onclick="game.setDifficulty('hard'); game.start();" style="width: min(140px, 25vw); min-width: 100px; background: linear-gradient(180deg, #FF6B6B 0%, #CC0000 100%);">HARD</button>
                 </div>
             </div>
         </div>
 
         <!-- Help Screen -->
         <div id="helpScreen" class="screen hidden">
-            <div style="font-size: 32px; margin-bottom: 20px; font-weight: bold; color: #C5A9FF;">遊び方・仲間の能力</div>
+            <div style="font-size: clamp(20px, 4vw, 32px); margin-bottom: 15px; margin-top: 10px; font-weight: bold; color: #C5A9FF;">遊び方・仲間の能力</div>
             
-            <div class="story-text" style="max-width: 750px; text-align: left; font-size: 13px;">
+            <div class="story-text" style="max-width: min(750px, 90vw); text-align: left; font-size: clamp(11px, 2vw, 13px);">
                 <strong style="color: #C5A9FF; font-size: 16px;">操作方法</strong><br>
                 [←↑↓→] または [WASD] - レオンを移動<br>
                 [SPACE] - 絆開放攻撃（リンクしている仲間からボスへビーム発射、最大3本）<br>
@@ -555,8 +562,16 @@
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.width = this.canvas.width;
-                this.height = this.canvas.height;
+                this.baseWidth = 1200;  // 基準幅
+                this.baseHeight = 800;  // 基準高さ
+                this.width = this.baseWidth;
+                this.height = this.baseHeight;
+                this.scaleX = 1.0;  // 初期スケール
+                this.scaleY = 1.0;  // 初期スケール
+                
+                // 画面サイズに合わせてリサイズ
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
 
                 this.assets = new AssetLoader();
                 this.state = 'loading'; // loading, title, playing, gameover, victory
@@ -613,6 +628,32 @@
                 });
             }
 
+            resize() {
+                const container = document.getElementById('gameContainer');
+                const containerRect = container.getBoundingClientRect();
+                
+                // コンテナの実際のサイズを取得
+                const containerWidth = containerRect.width;
+                const containerHeight = containerRect.height;
+                
+                // Canvasのサイズをコンテナに合わせる
+                this.canvas.width = containerWidth;
+                this.canvas.height = containerHeight;
+                
+                // ゲーム内の座標計算用のサイズを更新
+                this.width = containerWidth;
+                this.height = containerHeight;
+                
+                // スケール比を計算（基準サイズとの比率）
+                this.scaleX = containerWidth / this.baseWidth;
+                this.scaleY = containerHeight / this.baseHeight;
+                
+                // ゲーム中なら再描画
+                if (this.state === 'playing') {
+                    this.render();
+                }
+            }
+
             init() {
                 this.state = 'title';
                 this.gameStartTime = null; // リセット
@@ -622,8 +663,11 @@
 
                 // Draw background for title
                 this.ctx.clearRect(0, 0, this.width, this.height);
+                this.ctx.save();
+                this.ctx.scale(this.scaleX, this.scaleY);
                 const bg = this.assets.get('background');
-                if (bg) this.ctx.drawImage(bg, 0, 0, this.width, this.height);
+                if (bg) this.ctx.drawImage(bg, 0, 0, this.baseWidth, this.baseHeight);
+                this.ctx.restore();
                 
                 // BGM停止
                 this.stopBGM();
@@ -721,14 +765,14 @@
                     ? availableTypes[Math.floor(Math.random() * availableTypes.length)]
                     : ALLY_TYPES[Math.floor(Math.random() * ALLY_TYPES.length)];
                 
-                // Random pos edge
+                // Random pos edge（基準サイズで計算）
                 let x, y;
                 if (Math.random() < 0.5) {
-                    x = Math.random() < 0.5 ? -20 : this.width + 20;
-                    y = Math.random() * this.height;
+                    x = Math.random() < 0.5 ? -20 : this.baseWidth + 20;
+                    y = Math.random() * this.baseHeight;
                 } else {
-                    x = Math.random() * this.width;
-                    y = Math.random() < 0.5 ? -20 : this.height + 20;
+                    x = Math.random() * this.baseWidth;
+                    y = Math.random() < 0.5 ? -20 : this.baseHeight + 20;
                 }
                 this.allies.push(new Ally(this, x, y, type));
             }
@@ -840,10 +884,14 @@
 
             render() {
                 this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                // スケールを適用して描画
+                this.ctx.save();
+                this.ctx.scale(this.scaleX, this.scaleY);
 
                 // Background
                 const bg = this.assets.get('background');
-                if (bg) this.ctx.drawImage(bg, 0, 0, this.width, this.height);
+                if (bg) this.ctx.drawImage(bg, 0, 0, this.baseWidth, this.baseHeight);
 
                 // Links (draw before allies) - Canvas描画で画像を使わない
                 this.allies.forEach(a => {
@@ -875,6 +923,8 @@
                 this.player.render(this.ctx);
                 this.bullets.forEach(b => b.render(this.ctx));
                 this.effects.forEach(e => e.render(this.ctx));
+                
+                this.ctx.restore();
             }
 
             activateSpecialAttack() {
@@ -1011,7 +1061,7 @@
 
         class Player extends Entity {
             constructor(game) {
-                super(game, 600, 400);
+                super(game, game.baseWidth / 2, game.baseHeight / 2);
                 this.baseSpeed = 300;
                 this.speed = 300;
                 this.baseAttack = 1.0;
@@ -1132,11 +1182,12 @@
                 this.x += dx * this.speed * dt;
                 this.y += dy * this.speed * dt;
 
-                // Boundary (スプライトサイズ64x64を考慮：中心から32pxずつ)
+                // Boundary (スプライトサイズ64x64を考慮：中心から32pxずつ、基準サイズで計算)
                 const spriteHalfWidth = 32;
                 const spriteHalfHeight = 32;
-                this.x = Math.max(spriteHalfWidth, Math.min(this.game.width - spriteHalfWidth, this.x));
-                this.y = Math.max(spriteHalfHeight + 80, Math.min(this.game.height - spriteHalfHeight, this.y)); // 上部UI分80px考慮
+                const uiHeight = 80;
+                this.x = Math.max(spriteHalfWidth, Math.min(this.game.baseWidth - spriteHalfWidth, this.x));
+                this.y = Math.max(spriteHalfHeight + uiHeight, Math.min(this.game.baseHeight - spriteHalfHeight, this.y)); // 上部UI分80px考慮
             }
 
             render(ctx) {
@@ -1213,11 +1264,12 @@
                     this.x += (tx - this.x) * 2 * dt;
                     this.y += (ty - this.y) * 2 * dt;
                     
-                    // Boundary check (スプライトサイズ48x48を考慮：中心から24pxずつ)
+                    // Boundary check (スプライトサイズ48x48を考慮：中心から24pxずつ、基準サイズで計算)
                     const spriteHalfWidth = 24;
                     const spriteHalfHeight = 24;
-                    this.x = Math.max(spriteHalfWidth, Math.min(this.game.width - spriteHalfWidth, this.x));
-                    this.y = Math.max(spriteHalfHeight + 80, Math.min(this.game.height - spriteHalfHeight, this.y)); // 上部UI分80px考慮
+                    const uiHeight = 80;
+                    this.x = Math.max(spriteHalfWidth, Math.min(this.game.baseWidth - spriteHalfWidth, this.x));
+                    this.y = Math.max(spriteHalfHeight + uiHeight, Math.min(this.game.baseHeight - spriteHalfHeight, this.y)); // 上部UI分80px考慮
                 } else {
                     // Wander
                     this.wanderTimer -= dt;
@@ -1228,23 +1280,24 @@
                     this.x += Math.cos(this.wanderAngle) * 50 * dt;
                     this.y += Math.sin(this.wanderAngle) * 50 * dt;
 
-                    // Boundary check (スプライトサイズ48x48を考慮：中心から24pxずつ)
+                    // Boundary check (スプライトサイズ48x48を考慮：中心から24pxずつ、基準サイズで計算)
                     const spriteHalfWidth = 24;
                     const spriteHalfHeight = 24;
+                    const uiHeight = 80;
                     if (this.x < spriteHalfWidth) { 
                         this.x = spriteHalfWidth; 
                         this.wanderAngle = Math.PI - this.wanderAngle; 
                     }
-                    if (this.x > this.game.width - spriteHalfWidth) { 
-                        this.x = this.game.width - spriteHalfWidth; 
+                    if (this.x > this.game.baseWidth - spriteHalfWidth) { 
+                        this.x = this.game.baseWidth - spriteHalfWidth; 
                         this.wanderAngle = Math.PI - this.wanderAngle; 
                     }
-                    if (this.y < spriteHalfHeight + 80) { 
-                        this.y = spriteHalfHeight + 80; 
+                    if (this.y < spriteHalfHeight + uiHeight) { 
+                        this.y = spriteHalfHeight + uiHeight; 
                         this.wanderAngle = -this.wanderAngle; 
                     }
-                    if (this.y > this.game.height - spriteHalfHeight) { 
-                        this.y = this.game.height - spriteHalfHeight; 
+                    if (this.y > this.game.baseHeight - spriteHalfHeight) { 
+                        this.y = this.game.baseHeight - spriteHalfHeight; 
                         this.wanderAngle = -this.wanderAngle; 
                     }
                 }
@@ -1268,7 +1321,7 @@
 
         class Boss extends Entity {
             constructor(game) {
-                super(game, 600, 150);
+                super(game, game.baseWidth / 2, 150);
                 // 難易度に応じて体力を設定
                 const baseHp = 20000;
                 this.maxHp = game.difficulty === 'hard' ? baseHp * 8 : baseHp; // ハード：8倍、ノーマル：通常
@@ -1293,7 +1346,7 @@
 
                 // Move
                 this.moveTimer += dt;
-                this.x = 600 + Math.sin(this.moveTimer) * 300;
+                this.x = this.game.baseWidth / 2 + Math.sin(this.moveTimer) * 300;
 
                 // Attack
                 this.shootTimer -= dt;
@@ -1490,8 +1543,8 @@
                 this.y += this.vy * dt;
                 this.lifeTime += dt;
 
-                if (this.x < -100 || this.x > this.game.width + 100 ||
-                    this.y < -100 || this.y > this.game.height + 100) {
+                if (this.x < -100 || this.x > this.game.baseWidth + 100 ||
+                    this.y < -100 || this.y > this.game.baseHeight + 100) {
                     this.dead = true;
                 }
 
