@@ -254,7 +254,7 @@
                     </div>
                     <div class="bond-text" style="margin-top: 5px; font-size: 12px;">HP: <span id="playerHp">100</span>/100</div>
                     <div id="specialAttackInfo" class="bond-text" style="margin-top: 5px; font-size: 11px; color: #FFD700; display: none;">
-                        必殺技: <span id="specialAttackUses">3</span>/3 (Aキー)
+                        必殺技: <span id="specialAttackUses">5</span>/5 (Fキー)
                     </div>
                 </div>
                 <div class="timer-box" id="timerBox"><span id="timerVal">3:00</span></div>
@@ -280,7 +280,7 @@
                 レオンは仲間たちと"絆"を繋ぎながら力を増幅させ、女神の機械兵団を打ち倒していく。<br>
                 女神の兵器を破壊し、再び魔界の平和を取り戻せ！<br><br>
                 [←↑↓→] 移動 [SPACE] 絆開放・一斉攻撃<br>
-                [A] 必殺技（ハードモードのみ、6人全員リンク時、全弾幕破壊、使用回数3回）
+                [F] 必殺技（ハードモードのみ、6人全員リンク時、全弾幕破壊+大ダメージ、使用回数5回）
             </div>
 
             <div class="story-text" style="margin-top: 10px; max-width: min(700px, 90vw); font-size: clamp(10px, 1.8vw, 12px);">
@@ -316,8 +316,9 @@
                 </div>
             </div>
 
-            <div class="btn-container" style="margin-top: 10px;">
-                <button class="game-btn" onclick="game.showHelp()">遊び方・詳細</button>
+            <div class="btn-container" style="margin-top: 10px; pointer-events: auto; z-index: 100;">
+                <button class="game-btn" onclick="game.showHelp()" style="pointer-events: auto;">遊び方・詳細</button>
+                <button id="soundToggleTitle" class="game-btn" style="width: 80px; height: 50px; font-size: 14px; min-width: 80px; min-height: 50px; background: linear-gradient(180deg, #666 0%, #333 100%); pointer-events: auto; z-index: 101;">🔊 ON</button>
             </div>
             
             <div style="margin-top: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
@@ -337,12 +338,18 @@
                 <strong style="color: #C5A9FF; font-size: 16px;">操作方法</strong><br>
                 [←↑↓→] または [WASD] - レオンを移動<br>
                 [SPACE] - 絆開放攻撃（リンクしている仲間からボスへビーム発射、最大3本）<br>
-                [A] - 必殺技：全弾幕破壊（ハードモードのみ、6人全員リンク時のみ使用可能、使用回数3回）<br><br>
+                [F] - 必殺技：全弾幕破壊+大ダメージ（ハードモードのみ、6人全員リンク時のみ使用可能、使用回数5回）<br>
+                [音ボタン] - 右上のボタンでBGMのON/OFF切り替え<br><br>
                 
                 <strong style="color: #C5A9FF; font-size: 16px;">難易度モード</strong><br>
                 <div style="margin-top: 10px; padding: 10px; background: rgba(200, 200, 255, 0.2); border-radius: 5px;">
                     <strong style="color: #A0A0FF;">NORMAL</strong> - 標準的な難易度（敵の体力：20000）<br>
-                    <strong style="color: #FF6B6B;">HARD</strong> - 高難易度（敵の体力：160000、必殺技使用可能）
+                    <strong style="color: #FF6B6B;">HARD</strong> - 高難易度（敵の体力：160000、必殺技使用可能、使用回数5回）<br>
+                    <div style="margin-top: 8px; font-size: 12px; color: #FFE7FF;">
+                        <strong>ハードモードの特殊機能：</strong><br>
+                        • 必殺技が0の状態で仲間が倒れると、必殺技が1回復します（最大3回まで）<br>
+                        • 6人全員リンクしている状態で仲間が倒れると、その仲間がプレイヤーの近くに復帰します
+                    </div>
                 </div><br>
                 
                 <strong style="color: #C5A9FF; font-size: 16px;">ゲームの目的</strong><br>
@@ -406,7 +413,9 @@
                     • リンクしていない仲間は無敵です<br>
                     • 同じタイプの仲間は一度に1人まで出現します<br>
                     • 最大6人まで仲間とリンクできます<br>
-                    • ハードモードでは、6人全員リンク時に[A]キーで必殺技が使用できます（全弾幕破壊、使用回数3回）
+                    • ハードモードでは、6人全員リンク時に[F]キーで必殺技が使用できます（全弾幕破壊+大ダメージ、使用回数5回）<br>
+                    • <strong style="color: #FFD700;">必殺技の回復：</strong>ハードモードで必殺技が0の状態で仲間が倒れると、必殺技が1回復します（最大3回まで）<br>
+                    • <strong style="color: #FFD700;">仲間の復帰：</strong>ハードモードで6人全員リンクしている状態で仲間が倒れると、その仲間がプレイヤーの近く（100-200pxの範囲）に復帰します。復帰した仲間は再リンクが必要です
                 </div>
             </div>
             
@@ -593,11 +602,12 @@
                 this.attackCooldown = 0; // 絆開放攻撃のクールダウン
                 this.baseAttackCooldown = 1.5; // 基本攻撃間隔（秒）
                 this.difficulty = 'normal'; // 難易度：'normal' または 'hard'
-                this.specialAttackUses = 3; // 必殺技の使用回数（最大3回）
+                this.specialAttackUses = 5; // 必殺技の使用回数（最大5回）
                 
                 // Audio
                 this.bgm = null;
                 this.currentBgm = null;
+                this.soundEnabled = true; // 音のON/OFF状態
 
                 // Inputs
                 window.addEventListener('keydown', e => {
@@ -607,8 +617,8 @@
                         e.preventDefault();
                         this.activateBond();
                     }
-                    // 必殺技（Aキー、ハードモードのみ、6人全員リンク時）
-                    if ((e.key === 'a' || e.key === 'A') && this.state === 'playing') {
+                    // 必殺技（Fキー、ハードモードのみ、6人全員リンク時）
+                    if ((e.key === 'f' || e.key === 'F') && this.state === 'playing') {
                         e.preventDefault();
                         this.activateSpecialAttack();
                     }
@@ -626,6 +636,46 @@
                     document.getElementById('loadingScreen').classList.add('hidden');
                     this.init();
                 });
+                
+                // 音のON/OFFボタン（ゲーム中）
+                const soundToggle = document.getElementById('soundToggle');
+                if (soundToggle) {
+                    soundToggle.addEventListener('click', () => {
+                        this.toggleSound();
+                    });
+                }
+                
+                // 音のON/OFFボタン（タイトル画面）
+                const soundToggleTitle = document.getElementById('soundToggleTitle');
+                if (soundToggleTitle) {
+                    soundToggleTitle.addEventListener('click', () => {
+                        this.toggleSound();
+                    });
+                }
+            }
+            
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                const soundToggle = document.getElementById('soundToggle');
+                const soundToggleTitle = document.getElementById('soundToggleTitle');
+                const buttonText = this.soundEnabled ? '🔊 ON' : '🔇 OFF';
+                
+                if (soundToggle) soundToggle.innerText = buttonText;
+                if (soundToggleTitle) soundToggleTitle.innerText = buttonText;
+                
+                if (!this.soundEnabled) {
+                    // 音をOFFにする
+                    if (this.bgm) {
+                        this.bgm.pause();
+                    }
+                } else {
+                    // 音をONにする（ゲーム中ならBGMを再開）
+                    if (this.state === 'playing' && this.bgm) {
+                        this.bgm.play().catch(e => {
+                            console.log('BGM再開エラー:', e);
+                        });
+                    }
+                }
             }
 
             resize() {
@@ -690,7 +740,7 @@
                 this.bullets = [];
                 this.effects = [];
                 this.gameStartTime = performance.now(); // ゲーム開始時刻を記録
-                this.specialAttackUses = 3; // 必殺技の使用回数をリセット
+                this.specialAttackUses = 5; // 必殺技の使用回数をリセット
 
                 this.player = new Player(this);
                 this.boss = new Boss(this);
@@ -713,6 +763,9 @@
                 // 既存のBGMを停止
                 this.stopBGM();
                 
+                // 音がOFFの場合は再生しない
+                if (!this.soundEnabled) return;
+                
                 // 新しいBGMを再生
                 this.bgm = new Audio(src);
                 this.bgm.loop = true;
@@ -722,7 +775,7 @@
                 // エラー処理とループ確実化
                 this.bgm.addEventListener('ended', () => {
                     // ループが機能しない場合のフォールバック
-                    if (this.bgm && this.state === 'playing') {
+                    if (this.bgm && this.state === 'playing' && this.soundEnabled) {
                         this.bgm.currentTime = 0;
                         this.bgm.play().catch(e => {
                             console.log('BGM再開エラー:', e);
@@ -798,13 +851,18 @@
                     this.attackCooldown -= dt;
                 }
                 
-                // BGMが停止していないか確認（ゲーム中のみ）
-                if (this.state === 'playing' && this.bgm) {
+                // BGMが停止していないか確認（ゲーム中のみ、音がONの場合のみ）
+                if (this.state === 'playing' && this.bgm && this.soundEnabled) {
                     if (this.bgm.paused && this.bgm.readyState >= 2) {
                         // 一時停止している場合は再開
                         this.bgm.play().catch(e => {
                             // エラーは無視（ユーザー操作が必要な場合など）
                         });
+                    }
+                } else if (this.state === 'playing' && this.bgm && !this.soundEnabled) {
+                    // 音がOFFの場合は停止
+                    if (!this.bgm.paused) {
+                        this.bgm.pause();
                     }
                 }
 
@@ -813,9 +871,45 @@
                 this.boss.update(dt);
                 this.allies.forEach((a, i) => {
                     a.update(dt);
-                    // 倒れた仲間を削除
+                    // 倒れた仲間を処理
                     if (a.dead) {
+                        // 必殺技が0の状態で仲間が倒れたら必殺技を回復（ハードモードのみ）
+                        if (this.difficulty === 'hard' && this.specialAttackUses <= 0) {
+                            this.specialAttackUses = Math.min(5, this.specialAttackUses + 1);
+                        }
+                        
+                        // ハードモードで6人全員リンクしている場合、近くに復帰
+                        // 倒れる前のリンク数を計算（この仲間を含む）
+                        const bondCountBefore = this.allies.filter(ally => ally.linked && !ally.dead).length;
+                        const wasLinked = a.linked;
+                        const deadAllyType = a.typeConf;
+                        
                         this.allies.splice(i, 1);
+                        
+                        if (this.difficulty === 'hard' && bondCountBefore >= 6 && wasLinked) {
+                            // ハードモードで6人全員リンクしていた場合、近くに復帰
+                            // プレイヤーの周辺（100-200pxの範囲）に復活
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = 100 + Math.random() * 100; // 100-200pxの範囲
+                            const respawnX = Math.max(24, Math.min(this.baseWidth - 24, 
+                                this.player.x + Math.cos(angle) * distance));
+                            const respawnY = Math.max(104, Math.min(this.baseHeight - 24, 
+                                this.player.y + Math.sin(angle) * distance)); // UI分80px + 24px
+                            
+                            // 同じタイプの仲間として復活（リンク状態は解除）
+                            const respawnedAlly = new Ally(this, respawnX, respawnY, deadAllyType);
+                            respawnedAlly.linked = false; // 復活時はリンクしていない
+                            respawnedAlly.relinkCooldown = 1.0; // 1秒クールダウン
+                            this.allies.push(respawnedAlly);
+                            
+                            // 復活エフェクト
+                            this.effects.push(new Effect(this, respawnX, respawnY, 'bond_link'));
+                        } else {
+                            // 通常の処理：すぐに新しい仲間を出現させる（最大6人まで）
+                            if (this.allies.length < 6) {
+                                this.spawnAlly();
+                            }
+                        }
                     }
                 });
                 this.bullets.forEach((b, i) => {
@@ -828,6 +922,7 @@
                 });
 
                 // Spawn Allies Randomly (適度な頻度で出現、最大6人まで)
+                // 注：仲間が倒れた時は上記の処理で即座に出現するため、ここでは通常の出現のみ
                 if (this.allies.length < 6 && Math.random() < 0.01) this.spawnAlly();
 
                 // Check Victory/Defeat Conditions
@@ -938,7 +1033,7 @@
                 const linked = this.allies.filter(a => a.linked);
                 if (linked.length < 6) return;
                 
-                // 必殺技発動：全ての弾幕を破壊
+                // 必殺技発動：全ての弾幕を破壊 + ボスにダメージ
                 this.specialAttackUses--;
                 
                 // 全ての弾幕を破壊
@@ -947,6 +1042,14 @@
                     this.effects.push(new Effect(this, bullet.x, bullet.y, 'explosion'));
                     bullet.dead = true;
                 });
+                
+                // ボスにダメージを与える（6人全員リンク時の絆開放攻撃の3倍のダメージ）
+                const baseDamage = 6 * 50; // 6人分の基本ダメージ
+                const damage = baseDamage * this.player.attackMultiplier * 3; // 3倍のダメージ
+                this.boss.takeDamage(damage);
+                
+                // ボスへのヒットエフェクト
+                this.createBossHitEffect(this.boss.x, this.boss.y);
                 
                 // 画面全体にエフェクトを追加
                 for (let i = 0; i < 20; i++) {
@@ -1514,14 +1617,38 @@
                     ctx.fillRect(this.x - 50, this.y - 50, 100, 100);
                 }
 
-                // HP Bar (仕様：幅400、高さ20)
+                // HP Bar (画面上部に固定表示)
                 const pct = Math.max(0, this.hp / this.maxHp);
                 const barWidth = 400;
                 const barHeight = 20;
+                const barX = this.game.baseWidth / 2 - barWidth / 2; // 画面中央に固定
+                const barY = 90; // 画面上部（UIヘッダーの下）に固定
+                
+                // HPバーの背景
                 ctx.fillStyle = '#333';
-                ctx.fillRect(this.x - barWidth / 2, this.y - 120, barWidth, barHeight);
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+                
+                // HPバーの塗りつぶし
                 ctx.fillStyle = pct < 0.3 ? 'red' : pct < 0.6 ? 'orange' : 'green';
-                ctx.fillRect(this.x - barWidth / 2, this.y - 120, barWidth * pct, barHeight);
+                ctx.fillRect(barX, barY, barWidth * pct, barHeight);
+                
+                // HPバーの枠線
+                ctx.strokeStyle = '#FFF';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(barX, barY, barWidth, barHeight);
+                
+                // HP数値を表示
+                ctx.fillStyle = '#FFF';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const hpText = `${Math.floor(this.hp)} / ${Math.floor(this.maxHp)}`;
+                ctx.fillText(hpText, this.game.baseWidth / 2, barY - 15);
+                
+                // パーセンテージも表示
+                const percentText = `${Math.floor(pct * 100)}%`;
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(percentText, this.game.baseWidth / 2, barY + barHeight + 15);
             }
         }
 
