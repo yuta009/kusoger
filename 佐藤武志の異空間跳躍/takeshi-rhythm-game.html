@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佐藤武志の異空間跳躍：極大魔法リズムエンコード</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0015 0%, #1a0033 50%, #2d0055 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #gameContainer {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* タイトル画面 */
+        #titleScreen {
+            text-align: center;
+            z-index: 100;
+        }
+
+        .gameTitle {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #9d4edd, 0 0 40px #c77dff;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px #9d4edd, 0 0 40px #c77dff; }
+            50% { text-shadow: 0 0 30px #c77dff, 0 0 60px #e0aaff; }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            color: #e0aaff;
+        }
+
+        button {
+            background: linear-gradient(135deg, #7209b7, #9d4edd);
+            border: 2px solid #c77dff;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 10px;
+            margin: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.5);
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(199, 125, 255, 0.8);
+        }
+
+        /* ストーリー画面 */
+        #storyScreen {
+            display: none;
+            text-align: center;
+            width: min(92vw, 800px);
+            padding: clamp(16px, 4vw, 40px);
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 2px solid #9d4edd;
+        }
+
+        .storyText {
+            font-size: clamp(1em, 2.4vw, 1.3em);
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        /* ゲーム画面 */
+        #gameScreen {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* UI要素 */
+        #gameUI {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .manaBar {
+            width: 80%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #c77dff;
+            border-radius: 15px;
+            margin: 20px auto;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .manaFill {
+            height: 100%;
+            background: linear-gradient(90deg, #7209b7, #c77dff, #e0aaff);
+            width: 50%;
+            transition: width 0.3s;
+            box-shadow: 0 0 20px #c77dff;
+        }
+
+        .manaText {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            text-shadow: 0 0 5px #000;
+        }
+
+        .completionRate {
+            text-align: center;
+            font-size: 1.5em;
+            margin-top: 10px;
+            text-shadow: 0 0 10px #c77dff;
+        }
+
+        .scoreDisplay {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #9d4edd;
+        }
+
+        .scoreItem {
+            margin: 5px 0;
+        }
+
+        /* リザルト画面 */
+        #resultScreen {
+            display: none;
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            border: 3px solid #c77dff;
+        }
+
+        .resultTitle {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .resultNarration {
+            font-size: 1.1em;
+            margin: 10px 0 20px;
+            color: #e0aaff;
+            text-shadow: 0 0 10px rgba(199, 125, 255, 0.7);
+        }
+
+        .success {
+            color: #3bceac;
+            text-shadow: 0 0 20px #3bceac;
+        }
+
+        .failure {
+            color: #ff006e;
+            text-shadow: 0 0 20px #ff006e;
+        }
+
+        .resultStats {
+            font-size: 1.3em;
+            margin: 15px 0;
+        }
+
+        /* 判定表示 */
+        .judgement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            font-weight: bold;
+            pointer-events: none;
+            animation: judgementAnim 0.5s forwards;
+        }
+
+        @keyframes judgementAnim {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+        }
+
+        .perfect { color: #ffd60a; text-shadow: 0 0 20px #ffd60a; }
+        .good { color: #3bceac; text-shadow: 0 0 20px #3bceac; }
+        .miss { color: #ff006e; text-shadow: 0 0 20px #ff006e; }
+
+        /* 難易度選択 */
+        .difficultySelect {
+            margin: 30px 0;
+        }
+
+        .diffBtn {
+            margin: 0 10px;
+            padding: 12px 30px;
+        }
+
+        .easy { background: linear-gradient(135deg, #06d6a0, #118ab2); }
+        .normal { background: linear-gradient(135deg, #ffd60a, #f77f00); }
+        .hard { background: linear-gradient(135deg, #d00000, #9d0208); }
+
+        @media (max-width: 768px) {
+            .gameTitle { font-size: 1.8em; }
+            button { padding: 12px 30px; font-size: 1em; }
+            .diffBtn { display: block; margin: 10px auto; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <audio id="gameAudio" preload="metadata"></audio>
+        <!-- タイトル画面 -->
+        <div id="titleScreen">
+            <h1 class="gameTitle">佐藤武志の異空間跳躍</h1>
+            <p class="subtitle">極大魔法リズムエンコード</p>
+            <div class="difficultySelect">
+                <p>難易度選択：</p>
+                <button class="diffBtn easy" onclick="setDifficulty('easy')">EASY</button>
+                <button class="diffBtn normal" onclick="setDifficulty('normal')">NORMAL</button>
+                <button class="diffBtn hard" onclick="setDifficulty('hard')">HARD</button>
+            </div>
+            <div class="difficultySelect">
+                <p>音楽ファイル選択（mp3 / wav など）：</p>
+                <input type="file" id="audioFile" accept="audio/*">
+                <p id="audioStatus">未選択</p>
+            </div>
+            <div class="difficultySelect">
+                <p>音楽設定：</p>
+                <label>推定BPM <input type="number" id="bpmInput" min="40" max="240" step="1" value="110"></label>
+                <label>開始オフセット(ms) <input type="number" id="offsetInput" min="-2000" max="5000" step="10" value="0"></label>
+            </div>
+            <div class="difficultySelect">
+                <p>BGM設定：</p>
+                <label><input type="checkbox" id="audioToggle" checked> 音楽を再生する</label>
+            </div>
+            <button onclick="showStory()">START</button>
+            <button onclick="showControls()">操作説明</button>
+        </div>
+
+        <!-- ストーリー画面 -->
+        <div id="storyScreen">
+            <div class="storyText">
+                魔王と女神の戦いが激化する中、武志は修行の果てに、<br>
+                <strong>時間と空間を超越する"極大魔法（アルティマ・スペースシフト）"</strong> を会得した。<br><br>
+                だが、この魔法の発動には<br>
+                <strong>複雑な多層魔法陣をリズムに合わせて構築する儀式</strong> が必要である。<br><br>
+                成功すれば戦場へ。<br>
+                失敗すれば魔法暴走。<br>
+                武志は命がけのスペースシフトを開始した。
+            </div>
+            <button onclick="startGame()">魔法陣構築開始</button>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="gameScreen">
+            <canvas id="gameCanvas"></canvas>
+            <div id="gameUI">
+                <div class="manaBar">
+                    <div class="manaFill" id="manaFill"></div>
+                    <div class="manaText" id="manaText">魔力: 50%</div>
+                </div>
+                <div class="completionRate" id="completionRate">魔法陣完成率: 0%</div>
+                <div class="scoreDisplay">
+                    <div class="scoreItem">Perfect: <span id="perfectCount">0</span></div>
+                    <div class="scoreItem">Good: <span id="goodCount">0</span></div>
+                    <div class="scoreItem">Miss: <span id="missCount">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- リザルト画面 -->
+        <div id="resultScreen">
+            <h2 class="resultTitle" id="resultTitle">魔法陣完成！</h2>
+            <p class="resultNarration" id="resultNarration"></p>
+            <div class="resultStats">
+                <p>魔法陣完成率: <span id="finalCompletion">0</span>%</p>
+                <p>Perfect: <span id="finalPerfect">0</span></p>
+                <p>Good: <span id="finalGood">0</span></p>
+                <p>Miss: <span id="finalMiss">0</span></p>
+                <p>スコア: <span id="finalScore">0</span></p>
+            </div>
+            <button onclick="returnToTitle()">タイトルに戻る</button>
+            <button onclick="retry()">リトライ</button>
+        </div>
+    </div>
+
+    <script>
+        // ゲーム設定
+        const config = {
+            lanes: 6,
+            keys: ['a', 's', 'd', 'j', 'k', 'l'],
+            noteSpeed: 3,
+            judgementPerfect: 50,
+            judgementGood: 100,
+            difficulty: 'normal'
+        };
+
+        const difficulties = {
+            easy: { duration: 60, bpm: 90, beatStep: 2, offbeat: false, speed: 2.5, interference: false },
+            normal: { duration: 90, bpm: 110, beatStep: 1, offbeat: false, speed: 3, interference: true },
+            hard: { duration: 120, bpm: 130, beatStep: 1, offbeat: true, speed: 4, interference: true }
+        };
+
+        // ゲーム状態
+        let gameState = {
+            mana: 50,
+            completion: 0,
+            perfect: 0,
+            good: 0,
+            miss: 0,
+            notes: [],
+            time: 0,
+            isPlaying: false,
+            startTime: 0,
+            useAudio: false,
+            duration: 0
+        };
+
+        // Canvas設定
+        let canvas, ctx;
+        let viewWidth = 0;
+        let viewHeight = 0;
+        const centerX = () => viewWidth / 2;
+        const centerY = () => viewHeight / 2;
+        let audioEl;
+        let audioReady = false;
+        let bpmInput;
+        let offsetInput;
+        let audioToggle;
+        let audioEnabled = true;
+
+        function getLayout() {
+            const minDim = Math.min(viewWidth, viewHeight);
+            const scale = Math.min(minDim / 900, 1);
+            return {
+                scale,
+                judgeRadius: 250 * scale,
+                missRadius: 220 * scale,
+                noteStartDistance: 600 * scale,
+                magicBaseRadius: 150 * scale,
+                magicLayerStep: 30 * scale,
+                judgeDotRadius: 30 * scale,
+                noteRadius: 20 * scale,
+                laneFontSize: 20 * scale,
+                runeFontSize: 16 * scale,
+                judgementRange: 150 * scale
+            };
+        }
+
+        function init() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            document.addEventListener('keydown', handleKeyPress);
+
+            audioEl = document.getElementById('gameAudio');
+            const audioInput = document.getElementById('audioFile');
+            bpmInput = document.getElementById('bpmInput');
+            offsetInput = document.getElementById('offsetInput');
+            audioToggle = document.getElementById('audioToggle');
+            bpmInput.value = difficulties[config.difficulty].bpm;
+            offsetInput.value = '0';
+            audioToggle.checked = true;
+            audioEnabled = true;
+            audioInput.addEventListener('change', handleAudioSelect);
+            audioToggle.addEventListener('change', () => {
+                audioEnabled = audioToggle.checked;
+                audioEl.muted = !audioEnabled;
+            });
+            updateAudioStatus('デフォルトBGM読み込み中...');
+            audioEl.src = 'music/jump.mp3';
+            audioEl.load();
+            audioEl.addEventListener('loadedmetadata', () => {
+                audioReady = true;
+                updateAudioStatus(`音楽読み込み完了 (${Math.floor(audioEl.duration)}秒)`);
+            });
+            audioEl.addEventListener('error', () => {
+                audioReady = false;
+                updateAudioStatus('音楽の読み込みに失敗しました');
+            });
+        }
+
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            viewWidth = width;
+            viewHeight = height;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function setDifficulty(diff) {
+            config.difficulty = diff;
+            document.querySelectorAll('.diffBtn').forEach(btn => {
+                btn.style.opacity = '0.6';
+            });
+            event.target.style.opacity = '1';
+            if (bpmInput) bpmInput.value = difficulties[diff].bpm;
+        }
+
+        function handleAudioSelect(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            audioReady = false;
+            updateAudioStatus('音楽を読み込み中...');
+            audioEl.src = url;
+            audioEl.load();
+        }
+
+        function updateAudioStatus(text) {
+            const statusEl = document.getElementById('audioStatus');
+            if (statusEl) statusEl.textContent = text;
+        }
+
+        function showStory() {
+            document.getElementById('titleScreen').style.display = 'none';
+            document.getElementById('storyScreen').style.display = 'block';
+        }
+
+        function showControls() {
+            alert('【操作方法】\n\nPC: A, S, D, J, K, L キーでノートを入力\nスマホ: 画面をタップ\n\nノートが判定ラインに重なったタイミングでキーを押してください！\n\n記号の違い：\n◈ = 通常ノート（押してOK）\n✕ = 偽ノート（押すとMiss）');
+        }
+
+        function startGame() {
+            document.getElementById('storyScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            // ゲーム初期化
+            const diff = difficulties[config.difficulty];
+            config.noteSpeed = diff.speed;
+            const durationMs = audioReady ? audioEl.duration * 1000 : diff.duration * 1000;
+            
+            gameState = {
+                mana: 50,
+                completion: 0,
+                perfect: 0,
+                good: 0,
+                miss: 0,
+                notes: [],
+                time: 0,
+                isPlaying: true,
+                startTime: Date.now(),
+                duration: durationMs,
+                useAudio: audioReady && audioEnabled
+            };
+
+            generateNotesFromBpm(diff, durationMs);
+            updateUI();
+
+            if (gameState.useAudio) {
+                audioEl.currentTime = 0;
+                audioEl.play().catch(() => {
+                    gameState.useAudio = false;
+                });
+            }
+            gameLoop();
+        }
+
+        function generateNotesFromBpm(diff, durationMs) {
+            const bpm = getBpm();
+            const offsetMs = getOffsetMs();
+            const beatMs = 60000 / bpm;
+            const stepMs = beatMs * diff.beatStep;
+            for (let t = offsetMs; t < durationMs; t += stepMs) {
+                if (t >= 0) pushNote(t, diff.interference);
+                if (diff.offbeat) {
+                    const offbeatTime = t + beatMs / 2;
+                    if (offbeatTime < durationMs && offbeatTime >= 0) {
+                        pushNote(offbeatTime, diff.interference);
+                    }
+                }
+            }
+        }
+
+        function getBpm() {
+            const raw = bpmInput ? parseFloat(bpmInput.value) : NaN;
+            if (Number.isFinite(raw) && raw >= 40 && raw <= 240) return raw;
+            return difficulties[config.difficulty].bpm;
+        }
+
+        function getOffsetMs() {
+            const raw = offsetInput ? parseFloat(offsetInput.value) : 0;
+            if (!Number.isFinite(raw)) return 0;
+            return Math.max(-2000, Math.min(5000, raw));
+        }
+
+        function pushNote(spawnTime, interference) {
+            gameState.notes.push({
+                lane: Math.floor(Math.random() * config.lanes),
+                spawnTime,
+                distance: getLayout().noteStartDistance,
+                hit: false,
+                active: false,
+                isFake: interference && Math.random() < 0.1
+            });
+        }
+
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+
+            if (gameState.useAudio) {
+                gameState.time = audioEl.currentTime * 1000;
+            } else {
+                gameState.time = Date.now() - gameState.startTime;
+            }
+            
+            // 描画
+            drawGame();
+            updateNotes();
+            checkGameEnd();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function drawGame() {
+            // 背景
+            ctx.fillStyle = '#0a0015';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 星空エフェクト
+            for (let i = 0; i < 50; i++) {
+                const x = (i * 137.5) % canvas.width;
+                const y = (i * 217.3 + gameState.time * 0.01) % canvas.height;
+                ctx.fillStyle = `rgba(199, 125, 255, ${Math.random() * 0.5})`;
+                ctx.fillRect(x, y, 2, 2);
+            }
+
+            // 魔法陣
+            drawMagicCircle();
+
+            // レーンと判定ライン
+            drawLanes();
+
+            // ノート
+            drawNotes();
+        }
+
+        function drawMagicCircle() {
+            const layout = getLayout();
+            const radius = layout.magicBaseRadius + gameState.completion * 0.5 * layout.scale;
+            const layers = Math.floor(gameState.completion / 20) + 3;
+
+            for (let i = 0; i < layers; i++) {
+                const r = radius - i * layout.magicLayerStep;
+                const alpha = 0.3 + (gameState.completion / 100) * 0.5;
+                
+                ctx.strokeStyle = `rgba(157, 78, 221, ${alpha})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(centerX(), centerY(), r, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // 回転する魔法陣
+                const rotation = gameState.time * 0.001 * (i % 2 === 0 ? 1 : -1);
+                for (let j = 0; j < 6; j++) {
+                    const angle = (Math.PI * 2 / 6) * j + rotation;
+                    const x1 = centerX() + Math.cos(angle) * r;
+                    const y1 = centerY() + Math.sin(angle) * r;
+                    const x2 = centerX() + Math.cos(angle) * (r - 20);
+                    const y2 = centerY() + Math.sin(angle) * (r - 20);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            }
+
+            // 発光エフェクト
+            if (gameState.completion > 0) {
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#c77dff';
+                ctx.strokeStyle = `rgba(199, 125, 255, ${gameState.completion / 100})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(centerX(), centerY(), radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function drawLanes() {
+            const layout = getLayout();
+            const judgeRadius = layout.judgeRadius;
+            
+            for (let i = 0; i < config.lanes; i++) {
+                const angle = (Math.PI * 2 / config.lanes) * i - Math.PI / 2;
+                const x = centerX() + Math.cos(angle) * judgeRadius;
+                const y = centerY() + Math.sin(angle) * judgeRadius;
+
+                // 判定ライン
+                ctx.fillStyle = 'rgba(255, 214, 10, 0.6)';
+                ctx.beginPath();
+                ctx.arc(x, y, layout.judgeDotRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // キー表示
+                ctx.fillStyle = '#fff';
+                ctx.font = `bold ${layout.laneFontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(config.keys[i].toUpperCase(), x, y);
+            }
+        }
+
+        function drawNotes() {
+            const layout = getLayout();
+            
+            gameState.notes.forEach(note => {
+                if (note.hit || !note.active) return;
+
+                const angle = (Math.PI * 2 / config.lanes) * note.lane - Math.PI / 2;
+                const x = centerX() + Math.cos(angle) * note.distance;
+                const y = centerY() + Math.sin(angle) * note.distance;
+
+                // ノート描画
+                ctx.fillStyle = note.isFake ? 'rgba(139, 0, 139, 0.8)' : 'rgba(157, 78, 221, 0.9)';
+                ctx.strokeStyle = note.isFake ? '#8b008b' : '#c77dff';
+                ctx.lineWidth = 3;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, layout.noteRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // ルーン記号
+                ctx.fillStyle = '#fff';
+                ctx.font = `bold ${layout.runeFontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(note.isFake ? '✕' : '◈', x, y);
+            });
+        }
+
+        function updateNotes() {
+            const layout = getLayout();
+            const speed = config.noteSpeed * layout.scale;
+            gameState.notes.forEach(note => {
+                // スポーンタイミングチェック
+                if (!note.active && gameState.time >= note.spawnTime) {
+                    note.active = true;
+                }
+
+                if (!note.active || note.hit) return;
+                
+                note.distance -= speed;
+
+                // 自動Miss判定（判定ラインを通過）
+                if (note.distance < layout.missRadius) {
+                    if (!note.isFake) {
+                        judgeMiss();
+                    }
+                    note.hit = true;
+                }
+            });
+        }
+
+        function handleKeyPress(e) {
+            if (!gameState.isPlaying) return;
+
+            const keyIndex = config.keys.indexOf(e.key.toLowerCase());
+            if (keyIndex === -1) return;
+            const layout = getLayout();
+
+            // そのレーンの最も近いノートを探す
+            let closestNote = null;
+            let closestDist = Infinity;
+
+            gameState.notes.forEach(note => {
+                if (note.hit || !note.active || note.lane !== keyIndex) return;
+                const dist = Math.abs(note.distance - layout.judgeRadius);
+                if (dist < closestDist && dist < layout.judgementRange) { // 判定範囲内のみ
+                    closestDist = dist;
+                    closestNote = note;
+                }
+            });
+
+            if (closestNote) {
+                closestNote.hit = true;
+
+                if (closestNote.isFake) {
+                    judgeMiss();
+                } else if (closestDist < config.judgementPerfect * layout.scale) {
+                    judgePerfect();
+                } else if (closestDist < config.judgementGood * layout.scale) {
+                    judgeGood();
+                } else {
+                    judgeMiss();
+                }
+            }
+        }
+
+        function judgePerfect() {
+            gameState.perfect++;
+            gameState.mana = Math.min(100, gameState.mana + 3);
+            gameState.completion = Math.min(100, gameState.completion + 1.5);
+            showJudgement('PERFECT', 'perfect');
+            updateUI();
+        }
+
+        function judgeGood() {
+            gameState.good++;
+            gameState.mana = Math.min(100, gameState.mana + 1);
+            gameState.completion = Math.min(100, gameState.completion + 0.8);
+            showJudgement('GOOD', 'good');
+            updateUI();
+        }
+
+        function judgeMiss() {
+            gameState.miss++;
+            gameState.mana = Math.max(0, gameState.mana - 5);
+            gameState.completion = Math.max(0, gameState.completion - 2);
+            showJudgement('MISS', 'miss');
+            updateUI();
+        }
+
+        function showJudgement(text, className) {
+            const div = document.createElement('div');
+            div.className = `judgement ${className}`;
+            div.textContent = text;
+            document.getElementById('gameScreen').appendChild(div);
+            setTimeout(() => div.remove(), 500);
+        }
+
+        function updateUI() {
+            document.getElementById('manaFill').style.width = gameState.mana + '%';
+            document.getElementById('manaText').textContent = `魔力: ${Math.floor(gameState.mana)}%`;
+            document.getElementById('completionRate').textContent = `魔法陣完成率: ${Math.floor(gameState.completion)}%`;
+            document.getElementById('perfectCount').textContent = gameState.perfect;
+            document.getElementById('goodCount').textContent = gameState.good;
+            document.getElementById('missCount').textContent = gameState.miss;
+            if (gameState.isPlaying && Math.floor(gameState.completion) >= 100) {
+                endGame(true);
+            }
+        }
+
+        function checkGameEnd() {
+            // 失敗条件
+            if (gameState.mana <= 0 || gameState.miss >= 20) {
+                endGame(false);
+                return;
+            }
+
+            // 完成達成
+            if (gameState.completion >= 99.5) {
+                endGame(true);
+                return;
+            }
+
+            // 時間切れ
+            const timeUp = gameState.useAudio ? audioEl.ended : gameState.time >= gameState.duration;
+            if (timeUp) {
+                if (gameState.completion >= 80) {
+                    endGame(true);
+                } else if (gameState.completion < 50) {
+                    endGame(false);
+                } else {
+                    endGame(true);
+                }
+            }
+        }
+
+        function endGame(success) {
+            gameState.isPlaying = false;
+            if (gameState.useAudio) {
+                audioEl.pause();
+            }
+
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'block';
+
+            const title = document.getElementById('resultTitle');
+            const narration = document.getElementById('resultNarration');
+            if (success) {
+                title.textContent = '異空間跳躍成功！';
+                title.className = 'resultTitle success';
+                narration.textContent = '空間跳躍は成功し、女神と魔王の戦場へ向かった。';
+                narration.style.display = 'block';
+            } else {
+                title.textContent = '魔法暴走...';
+                title.className = 'resultTitle failure';
+                narration.textContent = '';
+                narration.style.display = 'none';
+            }
+
+            const score = gameState.perfect * 100 + gameState.good * 50;
+            
+            document.getElementById('finalCompletion').textContent = Math.floor(gameState.completion);
+            document.getElementById('finalPerfect').textContent = gameState.perfect;
+            document.getElementById('finalGood').textContent = gameState.good;
+            document.getElementById('finalMiss').textContent = gameState.miss;
+            document.getElementById('finalScore').textContent = score;
+        }
+
+        function returnToTitle() {
+            document.getElementById('resultScreen').style.display = 'none';
+            document.getElementById('titleScreen').style.display = 'block';
+            if (audioReady) {
+                audioEl.pause();
+                audioEl.currentTime = 0;
+            }
+        }
+
+        function retry() {
+            document.getElementById('resultScreen').style.display = 'none';
+            startGame();
+        }
+
+        // タッチ対応
+        canvas?.addEventListener('touchstart', (e) => {
+            if (!gameState.isPlaying) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            // タッチ位置から最も近いレーンを判定
+            const dx = x - centerX();
+            const dy = y - centerY();
+            let angle = Math.atan2(dy, dx) + Math.PI / 2;
+            if (angle < 0) angle += Math.PI * 2;
+            
+            const lane = Math.floor((angle / (Math.PI * 2)) * config.lanes);
+            const fakeEvent = { key: config.keys[lane] };
+            handleKeyPress(fakeEvent);
+        });
+
+        // 初期化
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔王の街づくりと子育て — 少年決戦録</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Gothic', 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0015 0%, #1a0033 50%, #2d004d 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #ff00ff;
+            font-size: 2em;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #ff00ff; }
+            to { text-shadow: 0 0 30px #ff00ff, 0 0 50px #8b00ff; }
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* タイトル画面 */
+        .title-screen {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .title-logo {
+            font-size: 2.5em;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .title-story {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #8b00ff;
+            border-radius: 10px;
+            line-height: 1.8;
+            color: #ccc;
+        }
+
+        /* 拠点画面 */
+        .base-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #8b00ff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(139, 0, 255, 0.4);
+        }
+
+        .panel h2 {
+            color: #ffaa00;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #8b00ff;
+            padding-bottom: 10px;
+        }
+
+        .stat-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #8b00ff;
+        }
+
+        .stat-label {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-size: 1.2em;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #6600cc, #9900ff);
+            border: 3px solid #ff00ff;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #9900ff, #cc00ff);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 0, 255, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            grid-column: span 2;
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #ff0066, #ff3399);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #ff3399, #ff66cc);
+        }
+
+        /* バトル画面 */
+        .battle-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .turn-display {
+            text-align: center;
+            font-size: 2em;
+            margin: 20px 0;
+            color: #ffaa00;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .fighters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .fighter {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #8b00ff;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .fighter-icon {
+            font-size: 5em;
+            margin: 20px 0;
+        }
+        
+        .fighter-icon img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border: 2px solid #8b00ff;
+        }
+
+        .fighter-name {
+            font-size: 1.5em;
+            color: #ffaa00;
+            margin-bottom: 15px;
+        }
+
+        .hp-bar-container {
+            margin: 20px 0;
+        }
+
+        .hp-bar {
+            width: 100%;
+            height: 40px;
+            background: #330000;
+            border: 3px solid #ff0000;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ff6600);
+            transition: width 0.5s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .stat-badge {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid #8b00ff;
+        }
+
+        .stat-badge-label {
+            color: #00ffff;
+            font-size: 0.9em;
+        }
+
+        .stat-badge-value {
+            color: #fff;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        /* 戦闘ログ */
+        .battle-log {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px;
+            height: 150px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 8px;
+            border-left: 4px solid #00ff00;
+            padding-left: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .log-damage { border-left-color: #ff0000; color: #ff6666; }
+        .log-heal { border-left-color: #00ff00; color: #66ff66; }
+        .log-buff { border-left-color: #ffaa00; color: #ffcc66; }
+        .log-system { border-left-color: #00ffff; color: #66ffff; }
+
+        /* 手札 */
+        .hand-area {
+            margin: 30px 0;
+        }
+
+        .hand-title {
+            text-align: center;
+            color: #ffaa00;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+        }
+
+        .hand-cards {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            width: 150px;
+            background: linear-gradient(135deg, #1a0033, #330066);
+            border: 3px solid #8b00ff;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: #ff00ff;
+            box-shadow: 0 15px 40px rgba(255, 0, 255, 0.7);
+        }
+
+        .card.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .card.used:hover {
+            transform: none;
+        }
+
+        .card-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #ffaa00;
+            margin-bottom: 8px;
+        }
+
+        .card-type {
+            font-size: 0.85em;
+            color: #00ffff;
+            margin-bottom: 10px;
+        }
+
+        .card-power {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ff6600;
+            text-align: center;
+            margin: 10px 0;
+            text-shadow: 0 0 10px #ff6600;
+        }
+
+        .card-desc {
+            font-size: 0.85em;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        /* デッキ編集 */
+        .deck-editor {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .card-pool, .current-deck {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #8b00ff;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .card-pool h3, .current-deck h3 {
+            color: #ffaa00;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .card-list {
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .card-list-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #666;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .card-list-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #8b00ff;
+        }
+
+        .card-list-name {
+            font-weight: bold;
+            color: #ffaa00;
+            margin-bottom: 5px;
+        }
+
+        .card-list-desc {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a0033, #330066);
+            border: 4px solid #ff00ff;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #ffaa00;
+        }
+
+        .modal-text {
+            font-size: 1.2em;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        /* スクロールバー */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #6600cc, #9900ff);
+            border-radius: 5px;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .base-layout,
+            .fighters,
+            .deck-editor {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+        /* BGM */
+        #bgm {
+            display: none;
+        }
+        
+        /* BGM管理用のスタイル（必要に応じて） */
+    </style>
+</head>
+<body>
+    <!-- BGM -->
+    <audio id="bgm" loop>
+        <source src="music/運命のカード.mp3" type="audio/mpeg">
+    </audio>
+    
+    <div class="container">
+        <h1>⚔️ 魔王の街づくりと子育て — 少年決戦録 ⚔️</h1>
+
+        <!-- タイトル画面 -->
+        <div id="titleScreen" class="screen active">
+            <div class="title-screen">
+                <div class="title-logo">
+                    👹 魔王の街づくりと子育て<br>
+                    — 少年決戦録 —
+                </div>
+                <div class="title-story">
+                    異世界転生を阻止した魔王は、軍事力拡大のため、魔王の街づくりを再開した。そんな時、ある一人の人間の少年を拾う。<br><br>
+                    勇者はまた生まれてくる可能性がある。その対抗策として魔王は街づくりの傍ら子育てを開始した。<br><br>
+                    その子供の為に魔力を結晶化しカードに変え、本来では勝てない敵とバトルし勝つことによって、強制的に強くしていくのであった。
+                </div>
+                <button class="btn btn-primary" onclick="startGame()">はじめる</button>
+            </div>
+        </div>
+
+        <!-- 拠点画面 -->
+        <div id="baseScreen" class="screen">
+            <div class="base-layout">
+                <!-- 左パネル：ステータス -->
+                <div class="panel">
+                    <h2>🧒 少年のステータス</h2>
+                    <div class="stat-list">
+                        <div class="stat-item">
+                            <span class="stat-label">名前</span>
+                            <span class="stat-value" id="boyName">レオン</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">レベル</span>
+                            <span class="stat-value" id="boyLv">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">経験値</span>
+                            <span class="stat-value" id="boyExp">0 / 50</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">HP</span>
+                            <span class="stat-value" id="boyHP">100 / 100</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">ATK</span>
+                            <span class="stat-value" id="boyATK">10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">DEF</span>
+                            <span class="stat-value" id="boyDEF">2</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">STR（物理補正）</span>
+                            <span class="stat-value" id="boySTR">5</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">INT（魔法補正）</span>
+                            <span class="stat-value" id="boyINT">3</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Score</span>
+                            <span class="stat-value" id="scoreValue">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右パネル：アクション -->
+                <div class="panel">
+                    <h2>🏰 拠点メニュー</h2>
+                    <div class="stat-list">
+                        <div class="stat-item">
+                            <span class="stat-label">勝利数</span>
+                            <span class="stat-value" id="winCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">デッキ枚数</span>
+                            <span class="stat-value" id="deckCount">10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">所持カード</span>
+                            <span class="stat-value" id="collectionCount">10</span>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn" onclick="startTraining()">💪 訓練</button>
+                        <button class="btn" onclick="showTraningMenu()">⚔️ 鍛錬</button>
+                        <button class="btn" onclick="showDeckEditor()">📋 デッキ編集</button>
+                        <button class="btn btn-primary" onclick="startBattle()">⚔️ 出撃</button>
+                        <button class="btn" onclick="recoverWithScore()">💊 回復（Score-200, HP+20）</button>
+                        <button class="btn" onclick="showHowToPlay()">📖 遊び方</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- バトル画面 -->
+        <div id="battleScreen" class="screen">
+            <div class="battle-container">
+                <div class="turn-display" id="turnDisplay">ターン 1 / 10</div>
+
+                <div class="fighters">
+                    <!-- 少年 -->
+                    <div class="fighter">
+                        <div class="fighter-icon" id="boyIcon"><img src="picture/8_Young Boy (Leon).png" alt="レオン"></div>
+                        <div class="fighter-name" id="battleBoyName">レオン</div>
+                        <div class="hp-bar-container">
+                            <div class="hp-bar">
+                                <div class="hp-fill" id="boyHPBar" style="width: 100%">
+                                    <span id="boyHPText">100 / 100</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stats-row">
+                            <div class="stat-badge">
+                                <div class="stat-badge-label">ATK</div>
+                                <div class="stat-badge-value" id="battleBoyATK">10</div>
+                            </div>
+                            <div class="stat-badge">
+                                <div class="stat-badge-label">DEF</div>
+                                <div class="stat-badge-value" id="battleBoyDEF">2</div>
+                            </div>
+                            <div class="stat-badge">
+                                <div class="stat-badge-label">STR</div>
+                                <div class="stat-badge-value" id="battleBoySTR">5</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 敵 -->
+                    <div class="fighter">
+                        <div class="fighter-icon" id="enemyIcon"><img src="" alt="敵" id="enemyIconImg"></div>
+                        <div class="fighter-name" id="enemyName">新人冒険者</div>
+                        <div class="hp-bar-container">
+                            <div class="hp-bar">
+                                <div class="hp-fill" id="enemyHPBar" style="width: 100%">
+                                    <span id="enemyHPText">60 / 60</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stats-row">
+                            <div class="stat-badge">
+                                <div class="stat-badge-label">ATK</div>
+                                <div class="stat-badge-value" id="enemyATK">8</div>
+                            </div>
+                            <div class="stat-badge">
+                                <div class="stat-badge-label">DEF</div>
+                                <div class="stat-badge-value" id="enemyDEF">1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-log" id="battleLog"></div>
+
+                <div class="hand-area">
+                    <div class="hand-title">🎴 手札（カードをクリックして使用）</div>
+                    <div class="hand-cards" id="handCards"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- デッキ編集画面 -->
+        <div id="deckScreen" class="screen">
+            <div class="panel" style="margin-bottom: 20px;">
+                <h2 style="text-align: center;">📋 デッキ編集</h2>
+            </div>
+            <div class="deck-editor">
+                <div class="card-pool">
+                    <h3>💎 所持カード一覧</h3>
+                    <div class="card-list" id="cardPool"></div>
+                </div>
+                <div class="current-deck">
+                    <h3>📋 現在のデッキ（<span id="deckSize">10</span>/10）</h3>
+                    <div class="card-list" id="deckList"></div>
+                </div>
+            </div>
+            <div class="button-group" style="margin-top: 30px;">
+                <button class="btn" onclick="closeDeckEditor()">完了</button>
+            </div>
+        </div>
+
+        <!-- リザルトモーダル -->
+        <div id="resultModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-title" id="resultTitle">🎉 勝利！ 🎉</div>
+                <div class="modal-text" id="resultText"></div>
+                <button class="btn" onclick="closeResult()">次へ</button>
+            </div>
+        </div>
+
+        <!-- ストーリーモーダル（ボス出現時など） -->
+        <div id="storyModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-title" id="storyTitle">勇者アルト、現る</div>
+                <div class="modal-text" id="storyText"></div>
+                <button class="btn" onclick="closeModal('storyModal')">戦う</button>
+            </div>
+        </div>
+
+        <!-- 遊び方モーダル -->
+        <div id="howtoModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-title">📖 遊び方</div>
+                <div class="modal-text" style="text-align: left;">
+                    ・目的：少年をカードで支援し、CPUに勝利して成長させる。<br>
+                    ・操作：カードをクリック/タップで使用（毎ターン1枚）。<br>
+                    ・勝利条件：敵HPを0、または10ターン後に自分のHPが上回る。<br>
+                    ・訓練：EXPのみ獲得（Score-5消費）。<br>
+                    ・鍛錬：STR/INTを+1（EXP-2 & Score-3消費）。<br>
+                    ・出撃：勝利で未所持カードを最大5種獲得（敵の初回撃破のみ）。<br>
+                    ・スコア：勝利で加点。弱いカード中心で勝つほど高得点。<br>
+                    ・回復：Score-200でHP+20（拠点から実行）。
+                </div>
+                <button class="btn" onclick="closeModal('howtoModal')">閉じる</button>
+            </div>
+        </div>
+
+        <!-- 鍛錬モーダル -->
+        <div id="trainingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-title">⚔️ 鍛錬</div>
+                <div class="modal-text">
+                    EXP -2 消費で成長<br>
+                    現在のEXP: <span id="trainingExp">0</span><br>
+                    現在のSTR: <span id="trainingSTR">5</span><br>
+                    現在のINT: <span id="trainingINT">3</span>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="confirmTraining('str')">STR+1</button>
+                    <button class="btn" onclick="confirmTraining('int')">INT+1</button>
+                    <button class="btn" onclick="closeModal('trainingModal')">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ゲームデータ
+        let gameData = {
+            boy: {
+                name: 'レオン',
+                lv: 1,
+                exp: 0,
+                expToNext: 50,
+                hp: 100,
+                hpMax: 100,
+                atk: 10,
+                def: 2,
+                str: 5,
+                int: 3
+            },
+            deck: [],
+            collection: [],
+            wins: 0,
+            defeatedEnemies: [],
+            score: 0
+        };
+
+        // カードデータベース
+        const cardDB = [
+            { id: 'c01', name: '闇剣', type: 'attack', attribute: 'physical', power: 8, desc: '8ダメージ' },
+            { id: 'c02', name: '火球', type: 'attack', attribute: 'magic', power: 10, desc: '10魔法ダメージ' },
+            { id: 'c03', name: '霧の盾', type: 'defend', attribute: '', power: 6, desc: '被ダメ軽減6' },
+            { id: 'c04', name: '迅速回復', type: 'heal', attribute: '', power: 12, desc: 'HP12回復' },
+            { id: 'c05', name: '激励', type: 'buff', attribute: '', power: 2, desc: 'ATK+2' },
+            { id: 'c06', name: '重斬', type: 'attack', attribute: 'physical', power: 14, desc: '14ダメージ' },
+            { id: 'c07', name: '硬化', type: 'buff', attribute: '', power: 3, desc: 'DEF+3' },
+            { id: 'c08', name: '吸血', type: 'special', attribute: 'physical', power: 6, desc: '6ダメ+回復3' },
+            { id: 'c09', name: '号令', type: 'special', attribute: '', power: 0, desc: '次攻撃+50%' },
+            { id: 'c10', name: '回避機構', type: 'defend', attribute: '', power: 0, desc: '攻撃を1回無効化' },
+            { id: 'c11', name: '連撃', type: 'attack', attribute: 'physical', power: 12, desc: '12ダメージ×2回' },
+            { id: 'c12', name: '氷槍', type: 'attack', attribute: 'magic', power: 9, desc: '9ダメージ（DEF無視20%）' },
+            { id: 'c13', name: '完全防御', type: 'defend', attribute: '', power: 10, desc: '被ダメ軽減10' },
+            { id: 'c14', name: '大回復', type: 'heal', attribute: '', power: 20, desc: 'HP20回復' },
+            { id: 'c15', name: '魔力集中', type: 'buff', attribute: '', power: 3, desc: 'INT+3（回復強化）' },
+            { id: 'c16', name: 'バーサーク', type: 'buff', attribute: '', power: 5, desc: 'ATK+5、DEF-2' },
+            { id: 'c17', name: '反射', type: 'special', attribute: '', power: 0, desc: '受けたダメージを30%返す' },
+            { id: 'c18', name: '毒刃', type: 'special', attribute: 'physical', power: 8, desc: '8ダメ＋毎ターン3ダメ（3ターン）' },
+            { id: 'c19', name: '瞬殺', type: 'attack', attribute: 'physical', power: 18, desc: '18ダメージ（HP50%以下で+5）' },
+            { id: 'c20', name: '再生の祝福', type: 'heal', attribute: '', power: 15, desc: 'HP15回復＋次のターン5回復' },
+            // ここから新規カード（C21〜C30）：既存ロジックで扱える効果のみ
+            { id: 'c21', name: '雷撃', type: 'attack', attribute: 'magic', power: 13, desc: '13魔法ダメージ' },
+            { id: 'c22', name: '強斬', type: 'attack', attribute: 'physical', power: 18, desc: '18ダメージ' },
+            { id: 'c23', name: '鉄壁', type: 'defend', attribute: '', power: 12, desc: '被ダメ軽減12' },
+            { id: 'c24', name: '治癒', type: 'heal', attribute: '', power: 22, desc: 'HP22回復' },
+            { id: 'c25', name: '衝波', type: 'attack', attribute: 'magic', power: 15, desc: '15魔法ダメージ' },
+            { id: 'c26', name: '剛打', type: 'attack', attribute: 'physical', power: 19, desc: '19ダメージ' },
+            { id: 'c27', name: '堅守', type: 'defend', attribute: '', power: 13, desc: '被ダメ軽減13' },
+            { id: 'c28', name: '癒光', type: 'heal', attribute: '', power: 24, desc: 'HP24回復' },
+            { id: 'c29', name: '烈火', type: 'attack', attribute: 'magic', power: 17, desc: '17魔法ダメージ' },
+            { id: 'c30', name: '断罪', type: 'attack', attribute: 'physical', power: 20, desc: '20ダメージ' }
+        ];
+
+        // 敵データベース（通常バトル）
+        const enemyDB = [
+            { name: '新人冒険者', hp: 60, atk: 8, def: 1, exp: 25 },
+            { name: '魔導士セラ', hp: 80, atk: 10, def: 2, exp: 30 },
+            { name: '銀騎士隊長', hp: 100, atk: 12, def: 3, exp: 35 },
+            { name: '狂戦士バルガ', hp: 120, atk: 14, def: 3, exp: 40 },
+            { name: '勇者アルト', hp: 150, atk: 16, def: 4, exp: 50 }
+        ];
+        
+        // 訓練用雑魚敵
+        const trainingEnemy = { name: '雑魚敵', hp: 40, atk: 5, def: 1, exp: 15 };
+
+        // バトルデータ
+        let battle = {
+            turn: 1,
+            maxTurns: 10,
+            hand: [],
+            boy: {},
+            enemy: {},
+            nextBonus: 0,
+            hasEvasion: false,
+            isTraining: false,  // 訓練バトルかどうか
+            usedAttackPowers: [] // 使用した攻撃/魔法カードのpowerを記録
+        };
+
+        // BGM管理
+        function playBGM(filename) {
+            const bgm = document.getElementById('bgm');
+            if (!bgm) return;
+            
+            // 現在のBGMを停止
+            bgm.pause();
+            bgm.currentTime = 0;
+            
+            // 新しいBGMを設定
+            bgm.src = `music/${filename}`;
+            bgm.volume = 0.5;  // 音量50%
+            bgm.loop = true;
+            
+            // BGM再生
+            bgm.play().catch(e => {
+                console.log('BGM再生に失敗しました（ユーザー操作が必要な場合があります）:', e);
+            });
+        }
+        
+        // メインBGM再生（タイトル・拠点）
+        function playMainBGM() {
+            playBGM('運命のカード.mp3');
+        }
+        
+        // バトルBGM再生（敵に応じて）
+        function playBattleBGM(enemyName) {
+            let bgmFile = '運命のカード.mp3';  // デフォルト
+            
+            if (enemyName === '新人冒険者') {
+                bgmFile = '新人冒険者.mp3';
+            } else if (enemyName === '魔導士セラ' || enemyName === '銀騎士隊長') {
+                bgmFile = '魔導士セラと銀騎士隊長.mp3';
+            } else if (enemyName === '狂戦士バルガ') {
+                bgmFile = '狂戦士バルガ.mp3';
+            } else if (enemyName === '勇者アルト') {
+                bgmFile = '勇者アルト（章ボス）.mp3';
+            } else if (enemyName === '雑魚敵') {
+                // 訓練バトルはメインBGMのまま、または別のBGM
+                bgmFile = '運命のカード.mp3';
+            }
+            
+            playBGM(bgmFile);
+        }
+
+        // ゲーム開始
+        function startGame() {
+            // 初期化（セーブ機能なし）
+            // 初期所持はC01〜C10のみ
+            gameData.collection = cardDB.slice(0, 10).map(c => c.id);
+            gameData.deck = cardDB.slice(0, 10).map(c => c.id);  // 最初の10枚をデッキに
+            showScreen('baseScreen');
+            updateBaseUI();
+            
+            // メインBGM再生
+            playMainBGM();
+        }
+
+        // 拠点UI更新
+        function updateBaseUI() {
+            const b = gameData.boy;
+            document.getElementById('boyName').textContent = b.name;
+            document.getElementById('boyLv').textContent = b.lv;
+            document.getElementById('boyExp').textContent = `${b.exp} / ${b.expToNext}`;
+            document.getElementById('boyHP').textContent = `${b.hp} / ${b.hpMax}`;
+            document.getElementById('boyATK').textContent = b.atk;
+            document.getElementById('boyDEF').textContent = b.def;
+            document.getElementById('boySTR').textContent = b.str;
+            document.getElementById('boyINT').textContent = b.int;
+            document.getElementById('winCount').textContent = gameData.wins;
+            document.getElementById('deckCount').textContent = gameData.deck.length;
+            document.getElementById('collectionCount').textContent = gameData.collection.length;
+            const scoreEl = document.getElementById('scoreValue');
+            if (scoreEl) scoreEl.textContent = gameData.score;
+        }
+
+        // バトル開始（通常バトル）
+        function startBattle() {
+            const enemyIdx = Math.min(Math.floor(gameData.wins / 2), enemyDB.length - 1);
+            const enemy = enemyDB[enemyIdx];
+
+            battle = {
+                turn: 1,
+                maxTurns: 10,
+                hand: [],
+                boy: {
+                    hp: gameData.boy.hp,
+                    hpMax: gameData.boy.hpMax,
+                    atk: gameData.boy.atk,
+                    def: gameData.boy.def,
+                    str: gameData.boy.str,
+                    int: gameData.boy.int,
+                    baseAtk: gameData.boy.atk,
+                    baseDef: gameData.boy.def
+                },
+                enemy: {
+                    name: enemy.name,
+                    hp: enemy.hp,
+                    hpMax: enemy.hp,
+                    atk: enemy.atk,
+                    def: enemy.def,
+                    baseAtk: enemy.atk,
+                    baseDef: enemy.def,
+                    exp: enemy.exp
+                },
+                nextBonus: 0,
+                hasEvasion: false,
+                isTraining: false,
+                usedAttackPowers: []
+            };
+
+            // バトルBGM再生
+            playBattleBGM(enemy.name);
+
+            drawHand();
+            updateBattleUI();
+            showScreen('battleScreen');
+            addLog('⚔️ バトル開始！', 'system');
+
+            // 勇者アルト出現ストーリー表示
+            if (enemy.name === '勇者アルト') {
+                showBossIntro();
+            }
+        }
+        
+        // 訓練バトル開始
+        function startTraining() {
+            // スコア消費チェック（-5）
+            if (gameData.score < 5) {
+                alert('スコアが不足しています（必要: 5）');
+                return;
+            }
+            gameData.score = Math.max(0, gameData.score - 5);
+            updateBaseUI();
+            battle = {
+                turn: 1,
+                maxTurns: 10,
+                hand: [],
+                boy: {
+                    hp: gameData.boy.hp,  // HPは引き継がない
+                    hpMax: gameData.boy.hpMax,
+                    atk: gameData.boy.atk,
+                    def: gameData.boy.def,
+                    str: gameData.boy.str,
+                    int: gameData.boy.int,
+                    baseAtk: gameData.boy.atk,
+                    baseDef: gameData.boy.def
+                },
+                enemy: {
+                    name: trainingEnemy.name,
+                    hp: trainingEnemy.hp,
+                    hpMax: trainingEnemy.hp,
+                    atk: trainingEnemy.atk,
+                    def: trainingEnemy.def,
+                    baseAtk: trainingEnemy.atk,
+                    baseDef: trainingEnemy.def,
+                    exp: trainingEnemy.exp
+                },
+                nextBonus: 0,
+                hasEvasion: false,
+                isTraining: true,
+                usedAttackPowers: []
+            };
+
+            // 訓練バトルBGM再生（メインBGMのまま）
+            playBattleBGM(trainingEnemy.name);
+
+            drawHand();
+            updateBattleUI();
+            showScreen('battleScreen');
+            addLog('⚔️ 訓練バトル開始！', 'system');
+        }
+
+        // 手札ドロー
+        function drawHand() {
+            const shuffled = [...gameData.deck].sort(() => Math.random() - 0.5);
+            battle.hand = shuffled.slice(0, 5).map(id => {
+                const card = cardDB.find(c => c.id === id);
+                return { ...card, used: false };
+            });
+        }
+
+        // 敵の画像パスを取得
+        function getEnemyImagePath(enemyName) {
+            const imageMap = {
+                '新人冒険者': 'picture/1_Rookie Adventurer.png',
+                '魔導士セラ': 'picture/2_Sera the Mage.png',
+                '銀騎士隊長': 'picture/3_Silver Knight Captain.png',
+                '狂戦士バルガ': 'picture/4_Berserker Varga.png',
+                '勇者アルト': 'picture/5_Brave Alto.png',
+                '雑魚敵': 'picture/6_Weak Enemy (Training).png'
+            };
+            return imageMap[enemyName] || 'picture/1_Rookie Adventurer.png';  // デフォルト
+        }
+        
+        // バトルUI更新
+        function updateBattleUI() {
+            document.getElementById('turnDisplay').textContent = `ターン ${battle.turn} / ${battle.maxTurns}`;
+            document.getElementById('battleBoyName').textContent = gameData.boy.name;
+            document.getElementById('enemyName').textContent = battle.enemy.name;
+
+            // 敵の画像を更新
+            const enemyIconImg = document.getElementById('enemyIconImg');
+            if (enemyIconImg) {
+                enemyIconImg.src = getEnemyImagePath(battle.enemy.name);
+                enemyIconImg.alt = battle.enemy.name;
+            }
+
+            // HP更新
+            const boyHPPct = Math.max(0, (battle.boy.hp / battle.boy.hpMax) * 100);
+            document.getElementById('boyHPBar').style.width = boyHPPct + '%';
+            document.getElementById('boyHPText').textContent = `${Math.max(0, battle.boy.hp)} / ${battle.boy.hpMax}`;
+
+            const enemyHPPct = Math.max(0, (battle.enemy.hp / battle.enemy.hpMax) * 100);
+            document.getElementById('enemyHPBar').style.width = enemyHPPct + '%';
+            document.getElementById('enemyHPText').textContent = `${Math.max(0, battle.enemy.hp)} / ${battle.enemy.hpMax}`;
+
+            // ステータス更新
+            document.getElementById('battleBoyATK').textContent = battle.boy.atk;
+            document.getElementById('battleBoyDEF').textContent = battle.boy.def;
+            document.getElementById('battleBoySTR').textContent = battle.boy.str;
+            document.getElementById('enemyATK').textContent = battle.enemy.atk;
+            document.getElementById('enemyDEF').textContent = battle.enemy.def;
+
+            renderHand();
+        }
+
+        // カード種別アイコンのパスを取得
+        function getCardTypeIcon(cardType) {
+            const iconMap = {
+                'attack': 'picture/9_Attack Icon.png',
+                'defend': 'picture/10_Defense Icon.png',
+                'heal': 'picture/11_Recovery Icon.png',
+                'special': 'picture/12_Special Icon.png',
+                'buff': 'picture/12_Special Icon.png'  // 補助は特殊アイコンを使用
+            };
+            return iconMap[cardType] || '';
+        }
+        
+        // 手札表示
+        function renderHand() {
+            const handEl = document.getElementById('handCards');
+            handEl.innerHTML = '';
+
+            battle.hand.forEach((card, idx) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card' + (card.used ? ' used' : '');
+                const attributeText = card.attribute === 'physical' ? '物理' : (card.attribute === 'magic' ? '魔法' : '');
+                const iconPath = getCardTypeIcon(card.type);
+                const iconHtml = iconPath ? `<img src="${iconPath}" alt="${card.type}" class="card-icon">` : '';
+                cardEl.innerHTML = `
+                    <div class="card-name">${iconHtml}${card.name}</div>
+                    <div class="card-type">[${card.type}${attributeText ? '・' + attributeText : ''}]</div>
+                    <div class="card-power">${card.power > 0 ? card.power : '－'}</div>
+                    <div class="card-desc">${card.desc}</div>
+                `;
+                if (!card.used) {
+                    cardEl.onclick = () => playCard(idx);
+                }
+                handEl.appendChild(cardEl);
+            });
+        }
+
+        // カード使用
+        function playCard(idx) {
+            const card = battle.hand[idx];
+            if (card.used) return;
+
+            card.used = true;
+            addLog(`💫 ${card.name}を使用！`, 'system');
+
+            let power = card.power;
+
+            // 号令効果
+            if (battle.nextBonus > 0) {
+                power = Math.floor(power * (1 + battle.nextBonus));
+                addLog(`✨ 号令効果で威力UP！`, 'buff');
+                battle.nextBonus = 0;
+            }
+
+            switch (card.type) {
+                case 'attack':
+                    // 物理/魔法でSTR/INTを使い分け
+                    let statBonus = 0;
+                    if (card.attribute === 'physical') {
+                        statBonus = battle.boy.str;
+                    } else if (card.attribute === 'magic') {
+                        statBonus = battle.boy.int;
+                    }
+                    let dmg = battle.boy.atk + power + statBonus - battle.enemy.def;
+                    dmg = Math.max(1, dmg);
+                    battle.enemy.hp -= dmg;
+                    addLog(`⚔️ 敵に${dmg}ダメージ！`, 'damage');
+                    // 攻撃/魔法カードのpowerを記録
+                    if (card.attribute === 'physical' || card.attribute === 'magic') {
+                        battle.usedAttackPowers.push(card.power);
+                    }
+                    break;
+
+                case 'defend':
+                    if (card.id === 'c10') {
+                        battle.hasEvasion = true;
+                        addLog(`🛡️ 次の攻撃を回避！`, 'buff');
+                    } else {
+                        battle.boy.def += power;
+                        addLog(`🛡️ 防御力が${power}上昇！`, 'buff');
+                    }
+                    break;
+
+                case 'heal':
+                    let heal = Math.floor(power + battle.boy.int * 0.5);
+                    heal = Math.min(heal, battle.boy.hpMax - battle.boy.hp);
+                    battle.boy.hp += heal;
+                    addLog(`❤️ HPが${heal}回復！`, 'heal');
+                    break;
+
+                case 'buff':
+                    if (card.id === 'c05') {
+                        battle.boy.atk += power;
+                        addLog(`⚡ 攻撃力が${power}上昇！`, 'buff');
+                    } else if (card.id === 'c07') {
+                        battle.boy.def += power;
+                        addLog(`🛡️ 防御力が${power}上昇！`, 'buff');
+                    }
+                    break;
+
+                case 'special':
+                    if (card.id === 'c08') {
+                        let dmg = power + battle.boy.str;
+                        dmg = Math.max(1, dmg - battle.enemy.def);
+                        battle.enemy.hp -= dmg;
+                        battle.boy.hp = Math.min(battle.boy.hpMax, battle.boy.hp + 3);
+                        addLog(`🩸 ${dmg}ダメージ＋3回復！`, 'heal');
+                    } else if (card.id === 'c09') {
+                        battle.nextBonus = 0.5;
+                        addLog(`📣 号令！次のカードが強化される！`, 'buff');
+                    }
+                    break;
+            }
+
+            updateBattleUI();
+            
+            // 自動的に敵のターンに移行
+            setTimeout(() => {
+                checkBattleEnd();  // まず勝利/敗北判定
+                if (battle.boy.hp > 0 && battle.enemy.hp > 0 && battle.turn <= battle.maxTurns) {
+                    enemyTurn();
+                    setTimeout(() => {
+                        checkBattleEnd();  // 敵のターン後の判定
+                        if (battle.boy.hp > 0 && battle.enemy.hp > 0) {
+                            nextTurn();
+                        }
+                    }, 1000);
+                }
+            }, 500);
+        }
+
+        // 敵のターン
+        function enemyTurn() {
+            const hpPct = battle.enemy.hp / battle.enemy.hpMax;
+            let action = 'attack';
+
+            // AI判定
+            if (hpPct < 0.3 && Math.random() < 0.5) {
+                action = 'heal';
+            } else if (hpPct > 0.7 && Math.random() < 0.2) {
+                action = 'buff';
+            }
+
+            addLog(`👹 ${battle.enemy.name}のターン！`, 'system');
+
+            if (action === 'attack') {
+                if (battle.hasEvasion) {
+                    battle.hasEvasion = false;
+                    addLog(`🌀 攻撃を回避した！`, 'buff');
+                } else {
+                    // ダメージに幅を持たせる（±15%）＋低確率クリティカル
+                    const base = Math.max(1, battle.enemy.atk - battle.boy.def);
+                    const variance = 0.85 + Math.random() * 0.3; // 0.85〜1.15
+                    let dmg = Math.max(1, Math.floor(base * variance));
+                    let isCrit = false;
+                    if (Math.random() < 0.1) { // 10%でクリティカル
+                        dmg = Math.floor(dmg * 1.5);
+                        isCrit = true;
+                    }
+                    battle.boy.hp -= dmg;
+                    addLog(isCrit ? `💥 クリティカル！${dmg}のダメージ！` : `⚔️ ${dmg}のダメージを受けた！`, 'damage');
+                }
+            } else if (action === 'heal') {
+                let heal = Math.floor(battle.enemy.hpMax * 0.2);
+                heal = Math.min(heal, battle.enemy.hpMax - battle.enemy.hp);
+                battle.enemy.hp += heal;
+                addLog(`💚 敵が${heal}HP回復！`, 'heal');
+            } else if (action === 'buff') {
+                battle.enemy.atk += 2;
+                addLog(`⚡ 敵の攻撃力が上昇！`, 'buff');
+            }
+        }
+
+        // 次のターンへ
+        function nextTurn() {
+            // DEFリセット
+            battle.boy.def = battle.boy.baseDef;
+            battle.enemy.def = battle.enemy.baseDef;
+
+            battle.turn++;
+            
+            // 手札を再ドロー（1ターンごとにカードを変える）
+            drawHand();
+
+            updateBattleUI();
+
+            if (battle.turn <= battle.maxTurns) {
+                addLog(`--- ターン ${battle.turn} 開始 ---`, 'system');
+                // カードが使用可能になる
+            } else {
+                checkBattleEnd();
+            }
+        }
+
+        // バトル終了判定
+        function checkBattleEnd() {
+            if (battle.enemy.hp <= 0) {
+                victory();
+            } else if (battle.boy.hp <= 0) {
+                defeat();
+            } else if (battle.turn > battle.maxTurns) {
+                if (battle.boy.hp > battle.enemy.hp) {
+                    victory();
+                } else {
+                    defeat();
+                }
+            }
+        }
+
+        // 勝利
+        function victory() {
+            addLog('🎉 勝利！', 'heal');
+            
+            // 章ボス（勇者アルト）撃破時：エンディング表示→タイトルへ
+            if (battle.enemy.name === '勇者アルト') {
+                // ボス戦でもスコアを加算
+                const gainedScore = calculateBattleScore();
+                gameData.score = Math.min(9999, gameData.score + gainedScore);
+                setTimeout(() => {
+                    const titleEl = document.getElementById('resultTitle');
+                    const textEl = document.getElementById('resultText');
+                    const btn = document.querySelector('#resultModal .btn');
+                    titleEl.innerHTML = '🎊 決着 🎊';
+                    textEl.innerHTML = (
+                        '少年は幾多の戦いを越え、ついに勇者アルトを打ち倒した。<br>' +
+                        '魔力のカードは静かに輝きを収め、街を覆っていた不穏は霧のように消える。<br>' +
+                        '魔王は短く告げる——「これで、しばらくは勇者は生まれまい」。<br><br>' +
+                        '少年は自らの意志で立ち、選ぶ力を得た。魔王は街づくりへ、少年は次の成長へと歩み出す。<br><br>' +
+                        `最終スコア: ${gameData.score}（今回 +${gainedScore}）`
+                    );
+                    btn.textContent = 'タイトルへ戻る';
+                    btn.onclick = () => {
+                        resetGame();
+                        document.getElementById('resultModal').classList.remove('active');
+                    };
+                    document.getElementById('resultModal').classList.add('active');
+                }, 1000);
+                return;
+            }
+
+            // 通常/訓練バトルの処理
+            const expGain = battle.enemy.exp;
+            gameData.boy.exp += expGain;
+
+            let resultText = `経験値 +${expGain}`;
+            
+            if (!battle.isTraining) {
+                gameData.wins++;
+                const enemyName = battle.enemy.name;
+                // 同一敵の再撃破ではカード追加しない（初回のみ）
+                if (!gameData.defeatedEnemies.includes(enemyName)) {
+                    gameData.defeatedEnemies.push(enemyName);
+                    // 新カードを5種まで追加（未所持からランダム）
+                    let availableCards = cardDB.filter(c => !gameData.collection.includes(c.id));
+                    const addCount = Math.min(5, availableCards.length);
+                    if (addCount > 0) {
+                        availableCards = availableCards.sort(() => Math.random() - 0.5);
+                        const gained = availableCards.slice(0, addCount);
+                        gained.forEach(c => gameData.collection.push(c.id));
+                        resultText += `<br>新しいカード獲得: ${gained.map(c => c.name).join('、')}`;
+                    }
+                } else {
+                    resultText += `<br>カード追加なし（同じ敵の再撃破）`;
+                }
+                gameData.boy.hp = battle.boy.hp;
+                // スコア加算（通常勝利）
+                const gainedScore = calculateBattleScore();
+                gameData.score = Math.min(9999, gameData.score + gainedScore);
+                resultText += `<br>スコア +${gainedScore}`;
+            }
+
+            if (gameData.boy.exp >= gameData.boy.expToNext) {
+                levelUp();
+                resultText += `<br><br>🎉 レベルアップ！`;
+            }
+
+            setTimeout(() => {
+                document.getElementById('resultTitle').innerHTML = '🎉 勝利！ 🎉';
+                document.getElementById('resultText').innerHTML = resultText;
+                document.getElementById('resultModal').classList.add('active');
+            }, 1000);
+        }
+
+        // 敗北
+        function defeat() {
+            addLog('💀 敗北...', 'damage');
+
+            setTimeout(() => {
+                document.getElementById('resultTitle').innerHTML = '💀 敗北... 💀';
+                document.getElementById('resultText').innerHTML = `少年が死んでしまった...<br><br>ゲームを最初からやり直します。`;
+                document.getElementById('resultModal').classList.add('active');
+                
+                // リセットボタンの処理
+                const closeBtn = document.querySelector('#resultModal .btn');
+                closeBtn.textContent = 'タイトルへ戻る';
+                closeBtn.onclick = () => {
+                    resetGame();
+                    document.getElementById('resultModal').classList.remove('active');
+                };
+            }, 1000);
+        }
+        
+        // ゲームリセット
+        function resetGame() {
+            gameData = {
+                boy: {
+                    name: 'レオン',
+                    lv: 1,
+                    exp: 0,
+                    expToNext: 50,
+                    hp: 100,
+                    hpMax: 100,
+                    atk: 10,
+                    def: 2,
+                    str: 5,
+                    int: 3
+                },
+                deck: [],
+                collection: [],
+                wins: 0,
+                defeatedEnemies: [],
+                score: 0
+            };
+            gameData.collection = cardDB.map(c => c.id);
+            gameData.deck = cardDB.slice(0, 10).map(c => c.id);
+            
+            // メインBGMを停止してタイトル画面へ
+            const bgm = document.getElementById('bgm');
+            if (bgm) {
+                bgm.pause();
+                bgm.currentTime = 0;
+            }
+            
+            showScreen('titleScreen');
+            
+            // リセットボタンを元に戻す
+            const closeBtn = document.querySelector('#resultModal .btn');
+            closeBtn.textContent = '次へ';
+            closeBtn.onclick = closeResult;
+        }
+
+        // レベルアップ
+        function levelUp() {
+            gameData.boy.lv++;
+            gameData.boy.exp = gameData.boy.exp - gameData.boy.expToNext;
+            gameData.boy.expToNext = gameData.boy.lv * 50;  // LV × 50
+            gameData.boy.hpMax += 10;
+            gameData.boy.atk += 2;
+            gameData.boy.def += 1;
+            addLog(`📈 レベル${gameData.boy.lv}にアップ！`, 'heal');
+        }
+
+
+        // 拠点に戻る
+        function returnToBase() {
+            // メインBGMに戻す
+            playMainBGM();
+            updateBaseUI();
+            showScreen('baseScreen');
+        }
+
+        // リザルトを閉じる
+        function closeResult() {
+            document.getElementById('resultModal').classList.remove('active');
+            returnToBase();
+        }
+        
+        // 鍛錬メニュー表示
+        function showTraningMenu() {
+            document.getElementById('trainingExp').textContent = gameData.boy.exp;
+            document.getElementById('trainingSTR').textContent = gameData.boy.str;
+            document.getElementById('trainingINT').textContent = gameData.boy.int;
+            document.getElementById('trainingModal').classList.add('active');
+        }
+        
+        // 鍛錬実行
+        function confirmTraining(type) {
+            if (gameData.boy.exp < 2) {
+                alert('EXPが足りません（必要: 2）');
+                return;
+            }
+            // スコア消費（-3）
+            if (gameData.score < 3) {
+                alert('スコアが足りません（必要: 3）');
+                return;
+            }
+            
+            gameData.score = Math.max(0, gameData.score - 3);
+            gameData.boy.exp -= 2;
+            if (type === 'str') {
+                gameData.boy.str += 1;
+            } else if (type === 'int') {
+                gameData.boy.int += 1;
+            }
+            
+            // モーダルを閉じずに更新（連続で強化可能）
+            document.getElementById('trainingExp').textContent = gameData.boy.exp;
+            document.getElementById('trainingSTR').textContent = gameData.boy.str;
+            document.getElementById('trainingINT').textContent = gameData.boy.int;
+            updateBaseUI();
+        }
+
+        // ログ追加
+        function addLog(msg, type = 'normal') {
+            const logEl = document.getElementById('battleLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry log-' + type;
+            entry.textContent = msg;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+
+        // デッキ編集
+        function showDeckEditor() {
+            showScreen('deckScreen');
+            renderDeckEditor();
+        }
+
+        function renderDeckEditor() {
+            const poolEl = document.getElementById('cardPool');
+            const deckEl = document.getElementById('deckList');
+
+            poolEl.innerHTML = '';
+            deckEl.innerHTML = '';
+
+            // 所持カード
+            gameData.collection.forEach(id => {
+                const card = cardDB.find(c => c.id === id);
+                const inDeck = gameData.deck.includes(id);
+                
+                const item = document.createElement('div');
+                item.className = 'card-list-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="card-list-name">${card.name} [${card.type}]</div>
+                        <div class="card-list-desc">${card.desc}</div>
+                    </div>
+                    <button class="btn" style="padding: 8px 16px; font-size: 0.9em;" 
+                            onclick="addToDeck('${id}')" ${inDeck ? 'disabled' : ''}>
+                        ${inDeck ? '使用中' : '追加'}
+                    </button>
+                `;
+                poolEl.appendChild(item);
+            });
+
+            // デッキ
+            gameData.deck.forEach((id, idx) => {
+                const card = cardDB.find(c => c.id === id);
+                const item = document.createElement('div');
+                item.className = 'card-list-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="card-list-name">${card.name} [${card.type}]</div>
+                        <div class="card-list-desc">${card.desc}</div>
+                    </div>
+                    <button class="btn" style="padding: 8px 16px; font-size: 0.9em;" 
+                            onclick="removeFromDeck(${idx})">削除</button>
+                `;
+                deckEl.appendChild(item);
+            });
+
+            document.getElementById('deckSize').textContent = gameData.deck.length;
+        }
+
+        function addToDeck(cardId) {
+            if (gameData.deck.length >= 10) {
+                alert('デッキは10枚までです。先に他のカードを削除してください。');
+                return;
+            }
+            if (gameData.deck.includes(cardId)) {
+                alert('既にデッキに入っています');
+                return;
+            }
+            gameData.deck.push(cardId);
+            renderDeckEditor();
+        }
+
+        function removeFromDeck(idx) {
+            if (gameData.deck.length <= 1) {
+                alert('デッキは最低1枚必要です');
+                return;
+            }
+            gameData.deck.splice(idx, 1);
+            renderDeckEditor();
+        }
+
+        function closeDeckEditor() {
+            // 完了時に10枚であることを確認
+            if (gameData.deck.length !== 10) {
+                alert(`デッキは10枚である必要があります。現在: ${gameData.deck.length}枚\n\n不足しているカードを追加してください。`);
+                return;
+            }
+            updateBaseUI();
+            showScreen('baseScreen');
+        }
+
+        // モーダル
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // スコア消費でHP回復（Score-200でHP+20）
+        function recoverWithScore() {
+            if (gameData.score < 200) {
+                alert('スコアが足りません（必要: 200）');
+                return;
+            }
+            if (gameData.boy.hp >= gameData.boy.hpMax) {
+                alert('HPはすでに最大です');
+                return;
+            }
+            gameData.score = Math.max(0, gameData.score - 200);
+            const heal = Math.min(20, gameData.boy.hpMax - gameData.boy.hp);
+            gameData.boy.hp += heal;
+            updateBaseUI();
+            alert(`HPを${heal}回復しました（Score -200）`);
+        }
+
+        // 画面切り替え
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // 勇者アルト出現ストーリー表示
+        function showBossIntro() {
+            const text = '「城門が開く音」とともに、白金の甲冑を纏った青年が光の剣を掲げて現れた。<br>' +
+                         '名は——勇者アルト。世界の修復を担う者。<br>' +
+                         '彼の視線は一瞬だけ少年に揺らぎ、しかし刃は迷わない。<br>' +
+                         '魔王は短く命じ、少年はカードを握る。<br>' +
+                         '「ここからが、お前の“選択”だ」。光と闇の決戦が始まる。';
+            const textEl = document.getElementById('storyText');
+            const titleEl = document.getElementById('storyTitle');
+            if (titleEl) titleEl.textContent = '勇者アルト、現る';
+            if (textEl) textEl.innerHTML = text;
+            document.getElementById('storyModal').classList.add('active');
+        }
+
+        // 遊び方を表示
+        function showHowToPlay() {
+            document.getElementById('howtoModal').classList.add('active');
+        }
+
+        // スコア計算（仕様7.5）
+        function calculateBattleScore() {
+            if (battle.isTraining) return 0;
+            const baseMap = {
+                '新人冒険者': 50,
+                '魔導士セラ': 80,
+                '銀騎士隊長': 110,
+                '狂戦士バルガ': 140,
+                '勇者アルト': 200
+            };
+            const expectMap = {
+                '新人冒険者': 10,
+                '魔導士セラ': 12,
+                '銀騎士隊長': 14,
+                '狂戦士バルガ': 16,
+                '勇者アルト': 18
+            };
+            const base = baseMap[battle.enemy.name] || 50;
+            const maxTurns = battle.maxTurns || 10;
+            const usedTurns = Math.max(1, Math.min(maxTurns, battle.turn));
+            const hpRatio = Math.max(0, Math.min(1, battle.boy.hp / battle.boy.hpMax));
+            const remainHpBonus = Math.round(base * hpRatio * 0.3);
+            const turnBonus = (maxTurns - usedTurns) * 5;
+
+            // 弱カードボーナス
+            let avgUsedPower;
+            if (battle.usedAttackPowers && battle.usedAttackPowers.length > 0) {
+                const sum = battle.usedAttackPowers.reduce((a, b) => a + b, 0);
+                avgUsedPower = sum / battle.usedAttackPowers.length;
+            } else {
+                const deckAtkCards = gameData.deck
+                    .map(id => cardDB.find(c => c.id === id))
+                    .filter(c => c && c.type === 'attack' && (c.attribute === 'physical' || c.attribute === 'magic'));
+                if (deckAtkCards.length > 0) {
+                    const sum = deckAtkCards.reduce((a, c) => a + (c.power || 0), 0);
+                    avgUsedPower = sum / deckAtkCards.length;
+                } else {
+                    avgUsedPower = 12;
+                }
+            }
+            const expect = expectMap[battle.enemy.name] || 12;
+            const ratio = Math.max(1.0, Math.min(2.0, expect / Math.max(1, avgUsedPower)));
+            const weakBonus = Math.round(base * (ratio - 1.0));
+
+            return Math.max(0, base + remainHpBonus + turnBonus + weakBonus);
+        }
+
+    </script>
+</body>
+</html>

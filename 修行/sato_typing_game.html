@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>異世界転生阻止 — 佐藤武志の修行</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Gothic', 'Consolas', 'Courier New', monospace;
+            background: linear-gradient(135deg, #000033, #1a0066, #000011);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .game-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* ヘッダー */
+        .header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            border-bottom: 2px solid #6600cc;
+            font-size: 16px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 8px;
+            background: rgba(102, 0, 204, 0.3);
+            border: 1px solid #6600cc;
+            border-radius: 5px;
+        }
+
+        .status-value {
+            display: block;
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffff66;
+            text-shadow: 0 0 5px rgba(255, 255, 102, 0.5);
+        }
+
+        /* 進行状況表示 */
+        .progress-panel {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px 20px;
+            border-bottom: 2px solid #6600cc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            color: #ddd;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .progress-item span:first-child {
+            color: #bbb;
+        }
+
+        .progress-item span:last-child {
+            color: #ffff66;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(255, 255, 102, 0.3);
+        }
+
+        /* メインフィールド */
+        .main-field {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #000066, #000000);
+        }
+
+        /* 敵キャラクター */
+        .enemy {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #333;
+            border: 2px solid #666;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            padding: 4px;
+            box-sizing: border-box;
+            z-index: 5;
+        }
+
+        .enemy.self-doubt {
+            background: url('Gemini_Generated_Image_58k9q958k9q958k9.png') center/cover, linear-gradient(45deg, #333, #666);
+            border-color: #888;
+        }
+
+        .enemy.laziness {
+            background: url('Gemini_Generated_Image_al6kpzal6kpzal6k.png') center/cover, linear-gradient(45deg, #264653, #2a9d8f);
+            border-color: #2a9d8f;
+        }
+
+        .enemy.regret {
+            background: url('Gemini_Generated_Image_n862s7n862s7n862.png') center/cover, linear-gradient(45deg, #e76f51, #f4a261);
+            border-color: #f4a261;
+        }
+
+        .enemy.fear {
+            background: url('Gemini_Generated_Image_p6f68pp6f68pp6f6.png') center/cover, linear-gradient(45deg, #8b0000, #ff6347);
+            border-color: #ff6347;
+            width: 100px;
+            height: 100px;
+        }
+
+        .enemy.boss {
+            background: url('Gemini_Generated_Image_2pm1pe2pm1pe2pm1.png') center/cover, linear-gradient(45deg, #4a0e4e, #ff0066);
+            border-color: #ff0066;
+            width: 120px;
+            height: 120px;
+            box-shadow: 0 0 20px #ff0066;
+        }
+
+        .enemy.final-boss {
+            background: url('Gemini_Generated_Image_phlwrtphlwrtphlw.png') center/cover, linear-gradient(45deg, #000, #8b0000, #000);
+            border-color: #ff0000;
+            width: 150px;
+            height: 150px;
+            box-shadow: 0 0 30px #ff0000;
+        }
+
+        .enemy-name {
+            font-size: 12px;
+            margin-bottom: 2px;
+            color: #ddd;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .enemy-word {
+            font-weight: bold;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 1px;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+            word-break: break-all;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .enemy-meaning {
+            font-size: 10px;
+            color: #ffcc66;
+            margin-bottom: 1px;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+            font-style: italic;
+            word-break: break-all;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .enemy-hp {
+            font-size: 12px;
+            color: #ff6666;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .hp-bar {
+            width: 60px;
+            height: 4px;
+            background: #333;
+            margin: 2px 0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .hp-fill {
+            height: 100%;
+            background: #ff6666;
+            transition: width 0.3s ease;
+        }
+
+        /* 入力エリア */
+        .input-area {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-top: 2px solid #6600cc;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        #word-input {
+            flex: 1;
+            padding: 15px;
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid #6600cc;
+            border-radius: 5px;
+            color: #fff;
+            font-family: 'MS Gothic', 'Consolas', 'Courier New', monospace;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        #word-input:focus {
+            outline: none;
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        .btn {
+            padding: 15px 20px;
+            background: linear-gradient(45deg, #6600cc, #9900ff);
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'MS Gothic', 'Consolas', 'Courier New', monospace;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:hover {
+            background: linear-gradient(45deg, #7700dd, #aa11ff);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(153, 0, 255, 0.4);
+        }
+
+        .btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 制御パネル */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        /* ログ */
+        .log {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 280px;
+            height: 180px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #6600cc;
+            border-radius: 5px;
+            padding: 12px;
+            font-size: 14px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .log-hit {
+            background: rgba(0, 255, 0, 0.2);
+            color: #66ff66;
+        }
+
+        .log-kill {
+            background: rgba(255, 255, 0, 0.2);
+            color: #ffff66;
+        }
+
+        .log-wave {
+            background: rgba(0, 100, 255, 0.2);
+            color: #6699ff;
+        }
+
+        /* エフェクト */
+        .damage-effect {
+            position: absolute;
+            color: #ff6666;
+            font-weight: bold;
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: damageFloat 1s ease-out;
+        }
+
+        @keyframes damageFloat {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(0, -50px) scale(1.2); }
+        }
+
+        .awakening-effect {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            color: #ffff00;
+            text-shadow: 0 0 20px #ffff00;
+            pointer-events: none;
+            z-index: 2000;
+            animation: awakeningPulse 2s ease-in-out;
+        }
+
+        @keyframes awakeningPulse {
+            0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        /* キャラクター */
+        .character {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 80px;
+            background: url('Gemini_Generated_Image_1qnds71qnds71qnd.png') center/cover, linear-gradient(45deg, #4169e1, #6495ed);
+            border: 2px solid #1e90ff;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            box-shadow: 0 0 15px rgba(30, 144, 255, 0.5);
+        }
+
+        .awakening {
+            box-shadow: 0 0 30px #ffff00 !important;
+            background: url('Gemini_Generated_Image_xrhhoexrhhoexrhh.png') center/cover, linear-gradient(45deg, #ffd700, #ffff00) !important;
+            animation: awakeningGlow 2s infinite alternate;
+        }
+
+        @keyframes awakeningGlow {
+            0% { box-shadow: 0 0 30px #ffff00; }
+            100% { box-shadow: 0 0 50px #ffff00; }
+        }
+
+        /* 移動アニメーション */
+        .enemy-moving {
+            animation: moveRight 20s linear infinite;
+        }
+
+        .enemy-moving.slow {
+            animation: moveRight 30s linear infinite;
+        }
+
+        .enemy-moving.fast {
+            animation: moveRight 15s linear infinite;
+        }
+
+        .enemy-moving.very-fast {
+            animation: moveRight 12s linear infinite;
+        }
+
+        @keyframes moveRight {
+            0% { left: -150px; }
+            100% { left: calc(100vw + 50px); } /* 画面外に出るように調整 */
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .header {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                font-size: 12px;
+            }
+
+            .progress-panel {
+                flex-direction: column;
+                gap: 5px;
+                font-size: 12px;
+            }
+
+            .controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .log {
+                width: 200px;
+                height: 120px;
+                font-size: 10px;
+            }
+
+            .enemy {
+                width: 70px;
+                height: 70px;
+                font-size: 12px;
+                padding: 3px;
+            }
+
+            .enemy-word {
+                font-size: 12px;
+            }
+
+            .enemy-meaning {
+                font-size: 9px;
+            }
+        }
+
+        .story-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .story-content {
+            background: linear-gradient(135deg, #1a0033, #330066);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            text-align: center;
+            border: 2px solid #6600cc;
+        }
+
+        .story-title {
+            font-size: 24px;
+            color: #ffff66;
+            margin-bottom: 20px;
+        }
+
+        .story-text {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #ddd;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- ストーリーモーダル -->
+        <div id="story-modal" class="story-modal">
+            <div class="story-content">
+                <div class="story-title">異世界転生阻止 — 佐藤武志の修行</div>
+                <div class="story-text">
+                    50代男性・佐藤武志は、異世界に転生する予定だったが、魔王によって阻止されてしまった。<br><br>
+                    魂は時空の彼方に葬られたものの、そこで意識が目覚める。<br><br>
+                    魂に刻まれていた記憶を糧に、彼は復讐のため修行を始める。<br>
+                    内なる敵を打ち破り、成長を重ね、最終的に「魔王」と「女神」に挑む力を得ることを目指す。
+                </div>
+                <button class="btn" onclick="startGame()">修行を開始する</button>
+            </div>
+        </div>
+
+        <!-- ヘッダー -->
+        <div class="header">
+            <div class="status">
+                <span>修行P</span>
+                <span class="status-value" id="training-points">100</span>
+            </div>
+            <div class="status">
+                <span>欠片</span>
+                <span class="status-value" id="fragments">0</span>
+            </div>
+            <div class="status">
+                <span>Wave</span>
+                <span class="status-value" id="current-wave">1</span>
+            </div>
+            <div class="status">
+                <span>タイプ力</span>
+                <span class="status-value" id="type-power">10</span>
+            </div>
+        </div>
+
+        <!-- 進行状況表示 -->
+        <div class="progress-panel">
+            <div class="progress-item">
+                <span>進行状況: </span>
+                <span id="wave-progress">1/10</span>
+            </div>
+            <div class="progress-item">
+                <span>ラスボスまで: </span>
+                <span id="boss-distance">9 Wave</span>
+            </div>
+            <div class="progress-item">
+                <span>逃した敵: </span>
+                <span id="escaped-count">0/3</span>
+            </div>
+            <div class="progress-item">
+                <span>ゲームオーバー条件: </span>
+                <span id="game-over-info">敵3体逃すと敗北</span>
+            </div>
+        </div>
+
+        <!-- メインフィールド -->
+        <div class="main-field" id="main-field">
+            <!-- キャラクター -->
+            <div class="character" id="character">
+                <div style="font-size: 10px;">佐藤武志</div>
+                <div style="font-size: 8px;">Lv.<span id="character-level">1</span></div>
+            </div>
+
+            <!-- ログ -->
+            <div class="log" id="game-log">
+                <div class="log-entry log-wave">ゲーム開始 - Wave 1</div>
+            </div>
+        </div>
+
+        <!-- 入力エリア -->
+        <div class="input-area">
+            <div class="input-container">
+                <input type="text" id="word-input" placeholder="敵の単語をタイプして倒せ..." autofocus>
+                <button class="btn" id="wave-btn" onclick="startWave()">Wave開始</button>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" onclick="buyMeditation()">瞑想購入 (<span id="meditation-cost">50</span>P)</button>
+                <button class="btn" onclick="buyGratitude()">感謝の体得 (<span id="gratitude-cost">100</span>P)</button>
+                <button class="btn" onclick="awaken()" id="awaken-btn" disabled>覚醒 (欠片10個)</button>
+                <button class="btn" onclick="resetProgress()">リセット</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ゲーム状態
+        const gameState = {
+            trainingPoints: 100,
+            fragments: 0,
+            currentWave: 1,
+            typePower: 10,
+            meditationLevel: 0,
+            gratitudeLevel: 0,
+            awakeningLevel: 0,
+            characterLevel: 1,
+            enemies: [],
+            currentInput: '',
+            isWaveActive: false,
+            combo: 0,
+            totalKills: 0,
+            meditationCost: 50,
+            gratitudeCost: 100,
+            escapedEnemies: 0, // 逃した敵の数
+            maxEscapedEnemies: 3 // ゲームオーバーになる逃した敵の数
+        };
+
+        // 敵データ
+        const enemyTypes = {
+            1: [
+                { name: '自己疑念', hp: 1, words: [
+                    'doubt', 'uncertain', 'worry', 'question', 'hesitate', 'confuse', 'wonder', 'suspect',
+                    'anxiety', 'nervous', 'insecure', 'unclear', 'confused', 'puzzled', 'bewildered',
+                    'skeptical', 'suspicious', 'distrust', 'mistrust', 'apprehensive', 'uneasy', 'restless'
+                ], type: 'self-doubt', meanings: [
+                    '疑い', '不確実', '心配', '疑問', 'ためらう', '混乱', '不思議', '疑う',
+                    '不安', '神経質', '不安定', '不明確', '混乱した', '困惑', '当惑',
+                    '懐疑的', '疑わしい', '不信', '疑念', '心配', '不安', '落ち着かない'
+                ] },
+                { name: '怠惰', hp: 1, words: [
+                    'lazy', 'tired', 'slow', 'rest', 'sleep', 'sloth', 'idle', 'inactive', 'passive',
+                    'lethargic', 'sluggish', 'drowsy', 'weary', 'exhausted', 'fatigued', 'drained',
+                    'listless', 'indolent', 'procrastinate', 'delay', 'postpone', 'hesitate', 'reluctant'
+                ], type: 'laziness', meanings: [
+                    '怠惰', '疲れた', '遅い', '休息', '睡眠', '怠惰', '怠惰', '非活動', '受動的',
+                    '無気力', '鈍い', '眠い', '疲れた', '疲弊', '疲労', '消耗',
+                    '無気力', '怠惰', '先延ばし', '遅延', '延期', 'ためらう', '嫌がる'
+                ] }
+            ],
+            2: [
+                { name: '自己疑念', hp: 1, words: [
+                    'doubt', 'uncertain', 'worry', 'question', 'hesitate', 'confuse', 'wonder', 'suspect',
+                    'anxiety', 'nervous', 'insecure', 'unclear', 'confused', 'puzzled', 'bewildered',
+                    'skeptical', 'suspicious', 'distrust', 'mistrust', 'apprehensive', 'uneasy', 'restless'
+                ], type: 'self-doubt', meanings: [
+                    '疑い', '不確実', '心配', '疑問', 'ためらう', '混乱', '不思議', '疑う',
+                    '不安', '神経質', '不安定', '不明確', '混乱した', '困惑', '当惑',
+                    '懐疑的', '疑わしい', '不信', '疑念', '心配', '不安', '落ち着かない'
+                ] },
+                { name: '怠惰', hp: 1, words: [
+                    'lazy', 'tired', 'slow', 'rest', 'sleep', 'sloth', 'idle', 'inactive', 'passive',
+                    'lethargic', 'sluggish', 'drowsy', 'weary', 'exhausted', 'fatigued', 'drained',
+                    'listless', 'indolent', 'procrastinate', 'delay', 'postpone', 'hesitate', 'reluctant'
+                ], type: 'laziness', meanings: [
+                    '怠惰', '疲れた', '遅い', '休息', '睡眠', '怠惰', '怠惰', '非活動', '受動的',
+                    '無気力', '鈍い', '眠い', '疲れた', '疲弊', '疲労', '消耗',
+                    '無気力', '怠惰', '先延ばし', '遅延', '延期', 'ためらう', '嫌がる'
+                ] },
+                { name: '過去の後悔', hp: 1, words: [
+                    'regret', 'mistake', 'past', 'sorrow', 'remorse', 'guilt', 'shame', 'blame',
+                    'fault', 'error', 'wrong', 'sin', 'transgress', 'violate', 'betray', 'abandon',
+                    'forsake', 'reject', 'deny', 'ignore', 'neglect', 'overlook', 'disappoint'
+                ], type: 'regret', meanings: [
+                    '後悔', '間違い', '過去', '悲しみ', '悔恨', '罪悪感', '恥', '非難',
+                    '過ち', '誤り', '間違い', '罪', '違反', '侵害', '裏切り', '放棄',
+                    '見捨てる', '拒絶', '否定', '無視', '怠慢', '見落とし', '失望'
+                ] }
+            ],
+            3: [
+                { name: '恐怖', hp: 2, words: [
+                    'fear', 'terror', 'panic', 'afraid', 'scared', 'frightened', 'terrified', 'horrified',
+                    'dread', 'anxiety', 'worry', 'concern', 'apprehension', 'trepidation', 'alarm',
+                    'distress', 'anguish', 'agony', 'torment', 'suffering', 'pain', 'hurt', 'wound',
+                    'trauma', 'shock', 'surprise', 'startle', 'fright', 'scare', 'threaten', 'menace'
+                ], type: 'fear', meanings: [
+                    '恐怖', '恐怖', 'パニック', '恐れている', '怖がっている', '怯えている', '恐怖', '恐怖',
+                    '恐れ', '不安', '心配', '懸念', '不安', '恐れ', '警報',
+                    '苦痛', '苦悩', '苦痛', '苦痛', '苦しみ', '痛み', '傷つく', '傷',
+                    'トラウマ', 'ショック', '驚き', '驚かす', '恐怖', '怖がらせる', '脅す', '脅威'
+                ] }
+            ],
+            5: [
+                { name: '怒りの残響', hp: 3, words: [
+                    'anger', 'rage', 'fury', 'wrath', 'hatred', 'hate', 'resent', 'bitter', 'hostile',
+                    'aggressive', 'violent', 'fierce', 'savage', 'brutal', 'cruel', 'harsh', 'severe',
+                    'intense', 'passionate', 'furious', 'enraged', 'infuriated', 'outraged', 'indignant',
+                    'irritated', 'annoyed', 'frustrated', 'exasperated', 'provoked', 'incited', 'stirred'
+                ], type: 'boss', meanings: [
+                    '怒り', '激怒', '激怒', '怒り', '憎しみ', '憎む', '憤る', '苦い', '敵対的',
+                    '攻撃的', '暴力的', '激しい', '野蛮', '残酷', '残酷', '厳しい', '深刻',
+                    '激しい', '情熱的', '激怒', '怒り狂う', '激怒', '憤慨', '憤慨',
+                    'イライラ', 'うんざり', 'フラストレーション', '激怒', '挑発', '扇動', 'かき混ぜる'
+                ] }
+            ],
+            10: [
+                { name: '内なる影・王', hp: 5, words: [
+                    'shadow', 'darkness', 'despair', 'destruction', 'oblivion', 'void', 'emptiness',
+                    'nothingness', 'abyss', 'chasm', 'pit', 'hell', 'damnation', 'doom', 'ruin',
+                    'collapse', 'fall', 'decay', 'corruption', 'evil', 'malice', 'spite', 'venom',
+                    'poison', 'toxin', 'plague', 'pestilence', 'curse', 'bane', 'scourge', 'affliction',
+                    'torment', 'agony', 'suffering', 'misery', 'woe', 'grief', 'sorrow', 'anguish'
+                ], type: 'final-boss', meanings: [
+                    '影', '闇', '絶望', '破壊', '忘却', '虚無', '空虚',
+                    '無', '深淵', '裂け目', '穴', '地獄', '破滅', '運命', '廃墟',
+                    '崩壊', '落下', '腐敗', '堕落', '悪', '悪意', '意地悪', '毒',
+                    '毒', '毒素', '疫病', '疫病', '呪い', '災い', '災い', '苦痛',
+                    '苦痛', '苦痛', '苦しみ', '悲惨', '悲しみ', '悲しみ', '悲しみ', '苦悩'
+                ] }
+            ]
+        };
+
+        // 自動修行P獲得
+        setInterval(() => {
+            if (gameState.meditationLevel > 0) {
+                gameState.trainingPoints += gameState.meditationLevel;
+                updateUI();
+            }
+        }, 1000);
+
+        // ゲーム開始
+        function startGame() {
+            document.getElementById('story-modal').style.display = 'none';
+            loadProgress();
+            updateUI();
+            
+            // 入力イベント
+            const input = document.getElementById('word-input');
+            input.addEventListener('input', handleInput);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearInput();
+                }
+            });
+
+            addLog('修行開始！内なる敵を倒して成長せよ！', 'wave');
+        }
+
+        // Wave開始
+        function startWave() {
+            if (gameState.isWaveActive) return;
+            
+            gameState.isWaveActive = true;
+            gameState.escapedEnemies = 0; // 逃した敵の数をリセット
+            document.getElementById('wave-btn').disabled = true;
+            
+            addLog(`Wave ${gameState.currentWave} 開始！`, 'wave');
+            
+            // 敵生成
+            const waveEnemies = enemyTypes[gameState.currentWave] || enemyTypes[1];
+            const enemyCount = Math.min(5 + gameState.currentWave * 2, 20); // 大幅に増加
+            
+            for (let i = 0; i < enemyCount; i++) {
+                setTimeout(() => {
+                    createEnemy(waveEnemies[Math.floor(Math.random() * waveEnemies.length)]);
+                }, i * 1500); // 生成間隔を少し長く
+            }
+            
+            // Wave終了チェック - 敵の数と速度に応じて調整
+            const checkDuration = Math.max(30000, enemyCount * 3000 + 10000); // 大幅に延長
+            setTimeout(() => {
+                if (gameState.enemies.length === 0) {
+                    completeWave();
+                }
+            }, checkDuration);
+        }
+
+        // 敵生成
+        function createEnemy(enemyData) {
+            const wordIndex = Math.floor(Math.random() * enemyData.words.length);
+            const enemy = {
+                ...enemyData,
+                id: Date.now() + Math.random(),
+                maxHp: enemyData.hp,
+                currentWord: enemyData.words[wordIndex],
+                currentMeaning: enemyData.meanings ? enemyData.meanings[wordIndex] : '',
+                element: null,
+                words: [...enemyData.words], // 単語リストをコピー
+                meanings: enemyData.meanings ? [...enemyData.meanings] : [] // 意味リストをコピー
+            };
+            
+            gameState.enemies.push(enemy);
+            
+            // DOM要素作成
+            const enemyEl = document.createElement('div');
+            
+            // レベルに応じた速度クラスを決定
+            let speedClass = 'enemy-moving';
+            if (gameState.currentWave <= 2) {
+                speedClass = 'enemy-moving slow';
+            } else if (gameState.currentWave <= 5) {
+                speedClass = 'enemy-moving';
+            } else if (gameState.currentWave <= 8) {
+                speedClass = 'enemy-moving fast';
+            } else {
+                speedClass = 'enemy-moving very-fast';
+            }
+            
+            enemyEl.className = `enemy ${enemy.type} ${speedClass}`;
+            enemyEl.id = `enemy-${enemy.id}`;
+            // 出現位置を中央に寄せて調整（main-field内に限定）
+            const mainField = document.getElementById('main-field');
+            const mainRect = mainField.getBoundingClientRect();
+
+            // 敵のサイズに応じた高さを取得
+            let enemyHeight = 80; // デフォルト
+            if (enemy.type === 'fear') enemyHeight = 100;
+            if (enemy.type === 'boss') enemyHeight = 120;
+            if (enemy.type === 'final-boss') enemyHeight = 150;
+
+            const minTop = 10; // フィールド内の上側余白
+            const maxTop = Math.max(minTop, mainRect.height - enemyHeight - 10);
+            enemyEl.style.top = Math.random() * (maxTop - minTop) + minTop + 'px';
+            
+            enemyEl.innerHTML = `
+                <div class="enemy-name">${enemy.name}</div>
+                <div class="enemy-word">${enemy.currentWord}</div>
+                <div class="enemy-meaning">${enemy.currentMeaning}</div>
+                <div class="hp-bar">
+                    <div class="hp-fill" style="width: 100%"></div>
+                </div>
+                <div class="enemy-hp">${enemy.hp}/${enemy.maxHp}</div>
+            `;
+            
+            enemy.element = enemyEl;
+            document.getElementById('main-field').appendChild(enemyEl);
+            
+            // 右端到達で削除（敗北条件）- 速度に応じて調整
+            let timeoutDuration = 20000; // デフォルト（大幅に延長）
+            if (gameState.currentWave <= 2) {
+                timeoutDuration = 30000; // ゆっくり
+            } else if (gameState.currentWave <= 5) {
+                timeoutDuration = 20000; // 普通
+            } else if (gameState.currentWave <= 8) {
+                timeoutDuration = 15000; // 速い
+            } else {
+                timeoutDuration = 12000; // 非常に速い
+            }
+            
+            setTimeout(() => {
+                if (gameState.enemies.find(e => e.id === enemy.id)) {
+                    gameState.escapedEnemies++;
+                    addLog(`${enemy.name} が右端に到達！逃した敵: ${gameState.escapedEnemies}/${gameState.maxEscapedEnemies}`);
+                    removeEnemy(enemy.id);
+                    updateUI();
+                    
+                    // ゲームオーバー判定
+                    if (gameState.escapedEnemies >= gameState.maxEscapedEnemies) {
+                        gameOver();
+                    }
+                }
+            }, timeoutDuration);
+        }
+
+        // 入力処理
+        function handleInput() {
+            const input = document.getElementById('word-input');
+            gameState.currentInput = input.value.toLowerCase().trim();
+            
+            // リアルタイム検証
+            gameState.enemies.forEach(enemy => {
+                if (enemy.currentWord.startsWith(gameState.currentInput) && gameState.currentInput.length > 0) {
+                    enemy.element.style.borderColor = '#00ff00';
+                } else {
+                    enemy.element.style.borderColor = enemy.element.className.includes('boss') ? '#ff0066' : 
+                        enemy.element.className.includes('final-boss') ? '#ff0000' : '#666';
+                }
+            });
+            
+            // 完全一致する敵を探して自動攻撃
+            const targetEnemy = gameState.enemies.find(enemy => enemy.currentWord === gameState.currentInput);
+            if (targetEnemy && gameState.currentInput.length > 0) {
+                // 自動攻撃実行
+                const comboMultiplier = 1 + gameState.combo * 0.1;
+                const damage = Math.floor(gameState.typePower * comboMultiplier);
+                dealDamage(targetEnemy, damage);
+                gameState.combo++;
+                addLog(`HIT! ${targetEnemy.name} に ${damage} ダメージ！ (コンボx${comboMultiplier.toFixed(1)})`, 'hit');
+                
+                // 入力フィールドをクリア
+                input.value = '';
+                gameState.currentInput = '';
+                
+                // 全敵のボーダーリセット
+                gameState.enemies.forEach(enemy => {
+                    enemy.element.style.borderColor = enemy.element.className.includes('boss') ? '#ff0066' : 
+                        enemy.element.className.includes('final-boss') ? '#ff0000' : '#666';
+                });
+            }
+        }
+
+        // 入力フィールドクリア
+        function clearInput() {
+            const input = document.getElementById('word-input');
+            input.value = '';
+            gameState.currentInput = '';
+            
+            // 全敵のボーダーリセット
+            gameState.enemies.forEach(enemy => {
+                enemy.element.style.borderColor = enemy.element.className.includes('boss') ? '#ff0066' : 
+                    enemy.element.className.includes('final-boss') ? '#ff0000' : '#666';
+            });
+            
+            addLog('入力クリア！', 'wave');
+        }
+
+
+        // ダメージ処理
+        function dealDamage(enemy, damage) {
+            enemy.hp -= damage;
+            
+            // ダメージエフェクト
+            showDamageEffect(enemy.element, damage);
+            
+            // HP更新
+            const hpFill = enemy.element.querySelector('.hp-fill');
+            const hpText = enemy.element.querySelector('.enemy-hp');
+            const hpPercent = (enemy.hp / enemy.maxHp) * 100;
+            
+            hpFill.style.width = Math.max(0, hpPercent) + '%';
+            hpText.textContent = `${Math.max(0, enemy.hp)}/${enemy.maxHp}`;
+            
+            if (enemy.hp <= 0) {
+                killEnemy(enemy);
+            } else {
+                // 敵が生きている場合、新しい単語を設定
+                const wordIndex = Math.floor(Math.random() * enemy.words.length);
+                const newWord = enemy.words[wordIndex];
+                const newMeaning = enemy.meanings[wordIndex];
+                enemy.currentWord = newWord;
+                enemy.currentMeaning = newMeaning;
+                const wordElement = enemy.element.querySelector('.enemy-word');
+                const meaningElement = enemy.element.querySelector('.enemy-meaning');
+                wordElement.textContent = newWord;
+                meaningElement.textContent = newMeaning;
+            }
+        }
+
+        // 敵撃破
+        function killEnemy(enemy) {
+            const reward = Math.floor(enemy.maxHp / 10) + 10;
+            gameState.trainingPoints += reward;
+            
+            if (Math.random() < 0.3) {
+                gameState.fragments++;
+                addLog(`${enemy.name} 撃破！修行P +${reward}, 欠片 +1`, 'kill');
+            } else {
+                addLog(`${enemy.name} 撃破！修行P +${reward}`, 'kill');
+            }
+            
+            gameState.totalKills++;
+            removeEnemy(enemy.id);
+            
+            // 最終ボス撃破
+            if (enemy.type === 'final-boss') {
+                addLog('最終ボス撃破！修行完了！', 'wave');
+                alert('おめでとう！佐藤武志は内なる影・王を倒し、真の力を手に入れた！');
+            }
+            
+            updateUI();
+        }
+
+        // 敵削除
+        function removeEnemy(enemyId) {
+            const enemyIndex = gameState.enemies.findIndex(e => e.id === enemyId);
+            if (enemyIndex !== -1) {
+                const enemy = gameState.enemies[enemyIndex];
+                if (enemy.element && enemy.element.parentNode) {
+                    enemy.element.parentNode.removeChild(enemy.element);
+                }
+                gameState.enemies.splice(enemyIndex, 1);
+            }
+            
+            // Wave完了チェック
+            if (gameState.enemies.length === 0 && gameState.isWaveActive) {
+                setTimeout(() => {
+                    if (gameState.enemies.length === 0) {
+                        completeWave();
+                    }
+                }, 1000);
+            }
+        }
+
+        // Wave完了
+        function completeWave() {
+            gameState.isWaveActive = false;
+            gameState.currentWave++;
+            document.getElementById('wave-btn').disabled = false;
+            addLog(`Wave ${gameState.currentWave - 1} 完了！`, 'wave');
+            updateUI();
+            saveProgress();
+        }
+
+        // ゲームオーバー
+        function gameOver() {
+            gameState.isWaveActive = false;
+            document.getElementById('wave-btn').disabled = false;
+            addLog(`ゲームオーバー！逃した敵: ${gameState.escapedEnemies}/${gameState.maxEscapedEnemies}`, 'wave');
+            
+            // ゲームオーバーモーダルを表示
+            showGameOverModal();
+        }
+
+        // ゲームオーバーモーダル表示
+        function showGameOverModal() {
+            const modal = document.createElement('div');
+            modal.className = 'story-modal';
+            modal.id = 'game-over-modal';
+            modal.innerHTML = `
+                <div class="story-content">
+                    <div class="story-title">修行失敗...</div>
+                    <div class="story-text">
+                        逃した敵: ${gameState.escapedEnemies}/${gameState.maxEscapedEnemies}<br><br>
+                        佐藤武志の修行は失敗に終わった。<br>
+                        内なる敵を制御できず、魂は再び時空の彼方に葬られてしまった。<br><br>
+                        しかし、修行の記憶は残っている。<br>
+                        再び挑戦するか、それとも諦めるか...
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                        <button class="btn" onclick="restartGame()">修行をやり直す</button>
+                        <button class="btn" onclick="returnToTitle()">タイトルに戻る</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // ゲーム再開
+        function restartGame() {
+            // ゲームオーバーモーダルを削除
+            const modal = document.getElementById('game-over-modal');
+            if (modal) {
+                document.body.removeChild(modal);
+            }
+            
+            // ゲーム状態をリセット
+            gameState.trainingPoints = 100;
+            gameState.fragments = 0;
+            gameState.currentWave = 1;
+            gameState.typePower = 2;
+            gameState.meditationLevel = 0;
+            gameState.gratitudeLevel = 0;
+            gameState.awakeningLevel = 0;
+            gameState.characterLevel = 1;
+            gameState.enemies = [];
+            gameState.currentInput = '';
+            gameState.isWaveActive = false;
+            gameState.combo = 0;
+            gameState.totalKills = 0;
+            gameState.meditationCost = 50;
+            gameState.gratitudeCost = 100;
+            gameState.escapedEnemies = 0;
+            
+            // 画面をクリア
+            const mainField = document.getElementById('main-field');
+            const enemies = mainField.querySelectorAll('.enemy');
+            enemies.forEach(enemy => enemy.remove());
+            
+            // キャラクターの覚醒状態をリセット
+            const character = document.getElementById('character');
+            character.classList.remove('awakening');
+            
+            // ログをクリア
+            const log = document.getElementById('game-log');
+            log.innerHTML = '<div class="log-entry log-wave">修行再開！内なる敵を倒して成長せよ！</div>';
+            
+            // UI更新
+            updateUI();
+            addLog('修行をやり直しました！', 'wave');
+        }
+
+        // タイトルに戻る
+        function returnToTitle() {
+            // ゲームオーバーモーダルを削除
+            const modal = document.getElementById('game-over-modal');
+            if (modal) {
+                document.body.removeChild(modal);
+            }
+            
+            // ストーリーモーダルを表示
+            document.getElementById('story-modal').style.display = 'flex';
+            
+            // ゲーム状態をリセット
+            gameState.trainingPoints = 100;
+            gameState.fragments = 0;
+            gameState.currentWave = 1;
+            gameState.typePower = 2;
+            gameState.meditationLevel = 0;
+            gameState.gratitudeLevel = 0;
+            gameState.awakeningLevel = 0;
+            gameState.characterLevel = 1;
+            gameState.enemies = [];
+            gameState.currentInput = '';
+            gameState.isWaveActive = false;
+            gameState.combo = 0;
+            gameState.totalKills = 0;
+            gameState.meditationCost = 50;
+            gameState.gratitudeCost = 100;
+            gameState.escapedEnemies = 0;
+            
+            // 画面をクリア
+            const mainField = document.getElementById('main-field');
+            const enemies = mainField.querySelectorAll('.enemy');
+            enemies.forEach(enemy => enemy.remove());
+            
+            // キャラクターの覚醒状態をリセット
+            const character = document.getElementById('character');
+            character.classList.remove('awakening');
+            
+            // ログをクリア
+            const log = document.getElementById('game-log');
+            log.innerHTML = '<div class="log-entry log-wave">ゲーム開始 - Wave 1</div>';
+            
+            // UI更新
+            updateUI();
+        }
+
+        // スキル購入
+        function buyMeditation() {
+            if (gameState.trainingPoints >= gameState.meditationCost) {
+                gameState.trainingPoints -= gameState.meditationCost;
+                gameState.meditationLevel++;
+                gameState.meditationCost = Math.floor(gameState.meditationCost * 1.5);
+                addLog(`瞑想レベル ${gameState.meditationLevel}！自動修行P +1/秒`);
+                updateUI();
+                saveProgress();
+            }
+        }
+
+        function buyGratitude() {
+            if (gameState.trainingPoints >= gameState.gratitudeCost) {
+                gameState.trainingPoints -= gameState.gratitudeCost;
+                gameState.gratitudeLevel++;
+                gameState.typePower += 1;
+                gameState.gratitudeCost = Math.floor(gameState.gratitudeCost * 1.5);
+                addLog(`感謝の体得！タイプ力 +1`);
+                updateUI();
+                saveProgress();
+            }
+        }
+
+        function awaken() {
+            if (gameState.fragments >= 10) {
+                gameState.fragments -= 10;
+                gameState.awakeningLevel++;
+                gameState.characterLevel++;
+                gameState.typePower += 50; // 大幅強化
+                
+                // 覚醒エフェクト
+                const effect = document.createElement('div');
+                effect.className = 'awakening-effect';
+                effect.textContent = '覚醒！！！';
+                document.body.appendChild(effect);
+                
+                setTimeout(() => {
+                    document.body.removeChild(effect);
+                }, 2000);
+                
+                const character = document.getElementById('character');
+                character.classList.add('awakening');
+                
+                addLog(`覚醒レベル ${gameState.awakeningLevel}！大幅強化！タイプ力 +50`, 'wave');
+                updateUI();
+                saveProgress();
+            }
+        }
+
+        // ダメージエフェクト
+        function showDamageEffect(element, damage) {
+            const effect = document.createElement('div');
+            effect.className = 'damage-effect';
+            effect.textContent = `-${Math.floor(damage)}`;
+            
+            const rect = element.getBoundingClientRect();
+            effect.style.left = rect.left + rect.width / 2 + 'px';
+            effect.style.top = rect.top + 'px';
+            
+            document.body.appendChild(effect);
+            
+            setTimeout(() => {
+                if (effect.parentNode) {
+                    effect.parentNode.removeChild(effect);
+                }
+            }, 1000);
+        }
+
+        // ログ追加
+        function addLog(message, type = '') {
+            const log = document.getElementById('game-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type ? 'log-' + type : ''}`;
+            entry.textContent = message;
+            
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            
+            // ログが多すぎる場合は削除
+            while (log.children.length > 20) {
+                log.removeChild(log.firstChild);
+            }
+        }
+
+        // UI更新
+        function updateUI() {
+            document.getElementById('training-points').textContent = gameState.trainingPoints;
+            document.getElementById('fragments').textContent = gameState.fragments;
+            document.getElementById('current-wave').textContent = gameState.currentWave;
+            document.getElementById('type-power').textContent = gameState.typePower;
+            document.getElementById('character-level').textContent = gameState.characterLevel;
+            document.getElementById('meditation-cost').textContent = gameState.meditationCost;
+            document.getElementById('gratitude-cost').textContent = gameState.gratitudeCost;
+            
+            // 覚醒ボタン
+            const awakenBtn = document.getElementById('awaken-btn');
+            awakenBtn.disabled = gameState.fragments < 10;
+            
+            // 進行状況更新
+            updateProgressDisplay();
+        }
+
+        // 進行状況表示更新
+        function updateProgressDisplay() {
+            const totalWaves = 10; // 総Wave数
+            const currentWave = gameState.currentWave;
+            const bossWave = 10; // ラスボスWave
+            
+            // 進行状況
+            document.getElementById('wave-progress').textContent = `${currentWave}/${totalWaves}`;
+            
+            // ラスボスまでの距離
+            const bossDistance = Math.max(0, bossWave - currentWave);
+            document.getElementById('boss-distance').textContent = `${bossDistance} Wave`;
+            
+            // 逃した敵の数
+            document.getElementById('escaped-count').textContent = `${gameState.escapedEnemies}/${gameState.maxEscapedEnemies}`;
+            
+            // ゲームオーバー条件
+            let gameOverInfo = '';
+            if (currentWave >= bossWave) {
+                gameOverInfo = '最終ボス戦！';
+            } else {
+                gameOverInfo = '敵3体逃すと敗北';
+            }
+            document.getElementById('game-over-info').textContent = gameOverInfo;
+            
+            // 逃した敵の数に応じて警告色に変更
+            const escapedElement = document.getElementById('escaped-count');
+            const gameOverElement = document.getElementById('game-over-info');
+            
+            if (gameState.escapedEnemies >= gameState.maxEscapedEnemies) {
+                escapedElement.style.color = '#ff0000'; // 赤色（ゲームオーバー）
+                gameOverElement.style.color = '#ff0000';
+            } else if (gameState.escapedEnemies >= gameState.maxEscapedEnemies - 1) {
+                escapedElement.style.color = '#ff6666'; // 赤色（危険）
+                gameOverElement.style.color = '#ff6666';
+            } else if (gameState.escapedEnemies >= gameState.maxEscapedEnemies - 2) {
+                escapedElement.style.color = '#ffaa66'; // オレンジ色（注意）
+                gameOverElement.style.color = '#ffaa66';
+            } else {
+                escapedElement.style.color = '#ffff66'; // 黄色（安全）
+                gameOverElement.style.color = '#ffff66';
+            }
+        }
+
+        // 進行状況読み込み
+        function loadProgress() {
+            const saved = localStorage.getItem('satoGameState');
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.assign(gameState, data);
+                addLog('前回の修行データを読み込みました', 'wave');
+            }
+        }
+
+        // リセット
+        function resetProgress() {
+            if (confirm('本当に修行を最初からやり直しますか？')) {
+                localStorage.removeItem('satoGameState');
+                location.reload();
+            }
+        }
+
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' && !gameState.isWaveActive) {
+                e.preventDefault();
+                startWave();
+            }
+            if (e.key === 'Escape') {
+                document.getElementById('word-input').focus();
+            }
+        });
+
+        // 進行状況保存
+        function saveProgress() {
+            localStorage.setItem('satoGameState', JSON.stringify({
+                trainingPoints: gameState.trainingPoints,
+                fragments: gameState.fragments,
+                currentWave: gameState.currentWave,
+                typePower: gameState.typePower,
+                meditationLevel: gameState.meditationLevel,
+                gratitudeLevel: gameState.gratitudeLevel,
+                awakeningLevel: gameState.awakeningLevel,
+                characterLevel: gameState.characterLevel,
+                totalKills: gameState.totalKills,
+                meditationCost: gameState.meditationCost,
+                gratitudeCost: gameState.gratitudeCost,
+                escapedEnemies: gameState.escapedEnemies,
+                maxEscapedEnemies: gameState.maxEscapedEnemies
+            }));
+        }
+
+        // ゲーム初期化
+        window.addEventListener('load', () => {
+            // ストーリーモーダルを表示
+            document.getElementById('story-modal').style.display = 'flex';
+            updateUI();
+        });
+    </script>
+</body>
+</html>

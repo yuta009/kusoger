@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>異世界転生阻止ゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c1810, #4a2c1a);
+            color: #fff;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .game-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ステータスバー */
+        .status-bar {
+            background: linear-gradient(90deg, #1a0d0d, #3d1a1a);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #8b0000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .mana-icon { background: linear-gradient(135deg, #4169e1, #1e3a8a); }
+        .health-icon { background: linear-gradient(135deg, #dc143c, #8b0000); }
+        .wave-icon { background: linear-gradient(135deg, #ffd700, #b8860b); }
+
+        /* メインゲームエリア */
+        .game-area {
+            flex: 1;
+            position: relative;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(139, 0, 0, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(25, 25, 112, 0.2) 0%, transparent 50%),
+                linear-gradient(45deg, #2c1810, #1a0d0d);
+            overflow: hidden;
+        }
+
+        /* パス（道） */
+        .path-segment {
+            position: absolute;
+            background: linear-gradient(45deg, #4a4a4a, #2c2c2c);
+            border: 1px solid #666;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .path-horizontal {
+            height: 40px;
+        }
+
+        .path-vertical {
+            width: 40px;
+        }
+
+        .path-corner {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+        }
+
+        /* 敵（ソウル） */
+        .soul {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #87ceeb, #4682b4);
+            border: 2px solid #fff;
+            box-shadow: 0 0 15px rgba(135, 206, 235, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            transition: all 0.1s ease;
+            z-index: 100;
+        }
+
+        .soul.weak { background: radial-gradient(circle, #98fb98, #32cd32); }
+        .soul.strong { background: radial-gradient(circle, #ffd700, #ff8c00); }
+        .soul.time-warp { 
+            background: radial-gradient(circle, #da70d6, #8b008b);
+            animation: time-warp 0.5s infinite alternate;
+        }
+
+        @keyframes time-warp {
+            0% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        /* 罠 */
+        .trap {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 50;
+        }
+
+        .trap:hover {
+            transform: scale(1.1);
+        }
+
+        .trap.slow {
+            background: linear-gradient(135deg, #4169e1, #1e3a8a);
+            border: 2px solid #87ceeb;
+            box-shadow: 0 0 10px rgba(65, 105, 225, 0.6);
+        }
+
+        .trap.spike {
+            background: linear-gradient(135deg, #8b4513, #654321);
+            border: 2px solid #daa520;
+            box-shadow: 0 0 10px rgba(218, 165, 32, 0.6);
+        }
+
+        .trap.bomb {
+            background: linear-gradient(135deg, #dc143c, #8b0000);
+            border: 2px solid #ff6347;
+            box-shadow: 0 0 10px rgba(220, 20, 60, 0.6);
+        }
+
+        /* ポータル */
+        .portal {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8a2be2, #4b0082);
+            border: 3px solid #dda0dd;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.8);
+            animation: portal-pulse 2s infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        @keyframes portal-pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(138, 43, 226, 0.8); }
+            50% { box-shadow: 0 0 50px rgba(138, 43, 226, 1); }
+        }
+
+        /* 罠選択パネル */
+        .trap-panel {
+            background: linear-gradient(90deg, #1a0d0d, #3d1a1a);
+            padding: 15px 20px;
+            border-top: 2px solid #8b0000;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+        }
+
+        .trap-button {
+            padding: 10px 15px;
+            border: 2px solid #666;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #333, #222);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            text-align: center;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .trap-button:hover {
+            border-color: #8b0000;
+            background: linear-gradient(135deg, #444, #333);
+            transform: translateY(-2px);
+        }
+
+        .trap-button.selected {
+            border-color: #ffd700;
+            background: linear-gradient(135deg, #4a4a00, #333300);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .trap-cost {
+            color: #87ceeb;
+            font-weight: bold;
+        }
+
+        .control-buttons {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .wave-button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #228b22, #006400);
+            border: 2px solid #32cd32;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .wave-button:hover {
+            background: linear-gradient(135deg, #32cd32, #228b22);
+            transform: translateY(-2px);
+        }
+
+        .wave-button:disabled {
+            background: linear-gradient(135deg, #666, #444);
+            border-color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* エフェクト */
+        .damage-text {
+            position: absolute;
+            color: #ff6347;
+            font-weight: bold;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 200;
+            animation: damage-float 1s ease-out forwards;
+        }
+
+        @keyframes damage-float {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+
+        .explosion {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffd700, #ff4500);
+            animation: explode 0.3s ease-out forwards;
+            z-index: 150;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* ストーリーオーバーレイ */
+        .story-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(25,0,25,0.9));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: story-fade-in 0.5s ease-in-out;
+        }
+
+        .story-content {
+            background: linear-gradient(135deg, #1a0d0d, #3d1a1a);
+            border: 3px solid #8b0000;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(139, 0, 0, 0.8);
+        }
+
+        .story-character {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: character-glow 2s infinite alternate;
+        }
+
+        .story-text h2 {
+            color: #ff6347;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .story-text p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #ddd;
+        }
+
+        .story-button {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #8b0000, #dc143c);
+            border: 2px solid #ff6347;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .story-button:hover {
+            background: linear-gradient(135deg, #dc143c, #ff6347);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 20, 60, 0.5);
+        }
+
+        @keyframes story-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes character-glow {
+            0% { text-shadow: 0 0 20px rgba(255, 100, 100, 0.8); }
+            100% { text-shadow: 0 0 40px rgba(255, 100, 100, 1); }
+        }
+
+        /* ストーリー進行表示 */
+        .story-progress {
+            background: linear-gradient(135deg, #4b0082, #8a2be2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .game-over h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .game-over.victory h2 {
+            color: #ffd700;
+        }
+
+        .game-over.defeat h2 {
+            color: #ff4500;
+        }
+
+        .restart-button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4169e1, #1e3a8a);
+            border: 2px solid #87ceeb;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .restart-button:hover {
+            background: linear-gradient(135deg, #5a7aed, #2e4aad);
+            transform: translateY(-2px);
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .status-bar {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .trap-panel {
+                padding: 10px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .trap-button {
+                min-width: 80px;
+                padding: 8px 10px;
+                font-size: 10px;
+            }
+
+            .soul {
+                width: 25px;
+                height: 25px;
+                font-size: 8px;
+            }
+
+            .trap {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+            <div class="game-container">
+        <!-- ストーリー画面 -->
+        <div id="story-overlay" class="story-overlay">
+            <div class="story-content">
+                <div class="story-character">👹</div>
+                <div class="story-text">
+                    <h2>時空干渉魔法発動</h2>
+                    <p id="story-message">50代男性・佐藤武志が車に引かれて命を落とした。光に包まれた魂が異世界転生のポータルへ向かっている...</p>
+                </div>
+                <button class="story-button" id="story-continue">続ける</button>
+            </div>
+        </div>
+
+        <!-- ステータスバー -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-icon mana-icon">🔮</div>
+                <span>魔力: <span id="mana">100</span></span>
+            </div>
+            <div class="status-item">
+                <div class="status-icon health-icon">🛡️</div>
+                <span>ポータル耐久: <span id="portal-health">20</span></span>
+            </div>
+            <div class="status-item">
+                <div class="status-icon wave-icon">⚡</div>
+                <span>ウェーブ: <span id="current-wave">1</span>/10</span>
+            </div>
+            <div class="status-item story-progress">
+                <div class="status-icon wave-icon">📖</div>
+                <span id="story-status">序章：時の歪み</span>
+            </div>
+        </div>
+
+        <!-- メインゲームエリア -->
+        <div class="game-area" id="game-area">
+            <!-- パス -->
+            <div class="path-segment path-horizontal" style="left: 0; top: 50px; width: 200px;"></div>
+            <div class="path-segment path-corner" style="left: 200px; top: 50px;"></div>
+            <div class="path-segment path-vertical" style="left: 220px; top: 90px; height: 200px;"></div>
+            <div class="path-segment path-corner" style="left: 200px; top: 290px;"></div>
+            <div class="path-segment path-horizontal" style="left: 240px; top: 310px; width: 200px;"></div>
+            <div class="path-segment path-corner" style="left: 440px; top: 290px;"></div>
+            <div class="path-segment path-vertical" style="left: 460px; top: 150px; height: 140px;"></div>
+            <div class="path-segment path-corner" style="left: 440px; top: 130px;"></div>
+            <div class="path-segment path-horizontal" style="left: 480px; top: 150px; width: 200px;"></div>
+
+            <!-- ポータル -->
+            <div class="portal" id="portal">🌀</div>
+        </div>
+
+        <!-- 罠選択パネル -->
+        <div class="trap-panel">
+            <div class="trap-button" data-trap="slow" data-cost="30">
+                <div>時間凍結陣</div>
+                <div class="trap-cost">コスト: 30</div>
+            </div>
+            <div class="trap-button" data-trap="spike" data-cost="20">
+                <div>暗黒の槍</div>
+                <div class="trap-cost">コスト: 20</div>
+            </div>
+            <div class="trap-button" data-trap="bomb" data-cost="50">
+                <div>魔力爆弾</div>
+                <div class="trap-cost">コスト: 50</div>
+            </div>
+            <div class="control-buttons">
+                <button class="wave-button" id="next-wave">魂の群れを迎撃 (Space)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class Game {
+            constructor() {
+                this.mana = 100;
+                this.portalHealth = 20;
+                this.currentWave = 1;
+                this.maxWaves = 10;
+                this.selectedTrap = null;
+                this.souls = [];
+                this.traps = [];
+                this.waveActive = false;
+                this.gameOver = false;
+                this.storyPhase = 0;
+                
+                this.pathPoints = [
+                    { x: 0, y: 70 },
+                    { x: 220, y: 70 },
+                    { x: 220, y: 310 },
+                    { x: 460, y: 310 },
+                    { x: 460, y: 150 },
+                    { x: 680, y: 150 }
+                ];
+                
+                this.soulTypes = {
+                    weak: { hp: 5, speed: 60, reward: 10, class: 'weak', name: '弱いソウル' },
+                    normal: { hp: 12, speed: 45, reward: 15, class: '', name: '通常ソウル' },
+                    strong: { hp: 25, speed: 90, reward: 25, class: 'time-warp', name: '時間歪曲ソウル' }
+                };
+
+                this.trapTypes = {
+                    slow: { cost: 30, effect: 'slow', symbol: '❄️', name: '時間凍結陣' },
+                    spike: { cost: 20, effect: 'damage', symbol: '🗡️', name: '暗黒の槍' },
+                    bomb: { cost: 50, effect: 'explosion', symbol: '💣', name: '魔力爆弾' }
+                };
+
+                this.storyData = {
+                    intro: {
+                        character: '👹',
+                        title: '時空干渉魔法発動',
+                        message: '50代男性・佐藤武志が車に引かれて命を落とした。光に包まれた魂が異世界転生のポータルへ向かっている...'
+                    },
+                    wave3: {
+                        character: '🔮',
+                        title: '魔王の意志',
+                        message: '未来を視た我は知っている...この男が異世界で英雄となり、最終的に我を倒すことを。時を遡り、転生を阻止せねば！'
+                    },
+                    wave5: {
+                        character: '⚡',
+                        title: '魔力の共鳴',
+                        message: '佐藤の魂が強くなっている...しかし我の時空魔法も強力だ。さらなる罠を設置し、完全に阻止するのだ！'
+                    },
+                    wave8: {
+                        character: '🌀',
+                        title: '最後の攻防',
+                        message: 'ポータルが不安定になっている。佐藤の魂は必死に転生を果たそうとしているが、我は絶対に阻止する！'
+                    },
+                    victory: {
+                        character: '👑',
+                        title: '時空支配完了',
+                        message: '見事だ！佐藤武志の転生を完全に阻止した。彼の魂は永遠に彷徨い続け、我の未来は安泰だ。この世界は魔王である我が支配する！'
+                    },
+                    defeat: {
+                        character: '😈',
+                        title: '運命への屈服',
+                        message: 'くそう...佐藤の魂がポータルに到達してしまった。異世界で英雄となった彼がいずれ我を倒しに来るだろう...運命には逆らえないのか？'
+                    }
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.showStory('intro');
+                this.bindEvents();
+                this.updateUI();
+            }
+
+            showStory(phase) {
+                const storyData = this.storyData[phase];
+                if (!storyData) return;
+
+                const overlay = document.getElementById('story-overlay');
+                const character = overlay.querySelector('.story-character');
+                const title = overlay.querySelector('h2');
+                const message = overlay.querySelector('p');
+
+                character.textContent = storyData.character;
+                title.textContent = storyData.title;
+                message.textContent = storyData.message;
+
+                overlay.style.display = 'flex';
+            }
+
+            hideStory() {
+                document.getElementById('story-overlay').style.display = 'none';
+            }
+
+            updateStoryProgress() {
+                const progressMap = {
+                    1: '序章：時の歪み',
+                    2: '第一章：魂の彷徨',
+                    3: '第二章：魔王の決意',
+                    4: '第三章：時空の戦い',
+                    5: '第四章：魔力の共鳴',
+                    6: '第五章：運命への抗い',
+                    7: '第六章：絶望の淵',
+                    8: '第七章：最後の攻防',
+                    9: '第八章：決着の時',
+                    10: '最終章：運命の選択'
+                };
+
+                document.getElementById('story-status').textContent = 
+                    progressMap[this.currentWave] || '完結';
+            }
+
+            bindEvents() {
+                // ストーリー続行ボタン
+                document.getElementById('story-continue').addEventListener('click', () => {
+                    this.hideStory();
+                });
+
+                // 罠選択
+                document.querySelectorAll('.trap-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        document.querySelectorAll('.trap-button').forEach(b => b.classList.remove('selected'));
+                        button.classList.add('selected');
+                        this.selectedTrap = button.dataset.trap;
+                        
+                        // 罠選択時のフレーバーテキスト
+                        this.showTrapDescription(button.dataset.trap);
+                    });
+                });
+
+                // ゲームエリアクリック
+                document.getElementById('game-area').addEventListener('click', (e) => {
+                    if (this.selectedTrap && !this.gameOver) {
+                        this.placeTrap(e);
+                    }
+                });
+
+                // 次のウェーブボタン
+                document.getElementById('next-wave').addEventListener('click', () => {
+                    this.startWave();
+                });
+
+                // キーボードショートカット
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        if (!this.waveActive && !this.gameOver) {
+                            this.startWave();
+                        }
+                    }
+                });
+            }
+
+            showTrapDescription(trapType) {
+                const descriptions = {
+                    slow: '時間凍結陣：敵の動きを半減させる古代の魔法陣',
+                    spike: '暗黒の槍：魔界の鋼で作られた致命的な槍罠',
+                    bomb: '魔力爆弾：魔王の魔力を込めた強力な爆発罠'
+                };
+
+                // 簡単な通知表示（実装を簡素化）
+                console.log(descriptions[trapType]);
+            }
+
+            placeTrap(e) {
+                const trapData = this.trapTypes[this.selectedTrap];
+                if (this.mana < trapData.cost) return;
+
+                const rect = document.getElementById('game-area').getBoundingClientRect();
+                const x = e.clientX - rect.left - 17;
+                const y = e.clientY - rect.top - 17;
+
+                // パス上かチェック（簡単な範囲チェック）
+                const onPath = this.isOnPath(x + 17, y + 17);
+                if (!onPath) return;
+
+                // 既存の罠がある場所かチェック
+                const existingTrap = this.traps.find(trap => 
+                    Math.abs(trap.x - x) < 35 && Math.abs(trap.y - y) < 35
+                );
+                if (existingTrap) return;
+
+                // 罠を設置
+                this.mana -= trapData.cost;
+                this.updateUI();
+
+                const trapElement = document.createElement('div');
+                trapElement.className = `trap ${this.selectedTrap}`;
+                trapElement.style.left = x + 'px';
+                trapElement.style.top = y + 'px';
+                trapElement.innerHTML = trapData.symbol;
+                document.getElementById('game-area').appendChild(trapElement);
+
+                const trap = {
+                    element: trapElement,
+                    type: this.selectedTrap,
+                    x: x + 17,
+                    y: y + 17,
+                    lastActivation: 0
+                };
+                this.traps.push(trap);
+
+                // 選択解除
+                document.querySelectorAll('.trap-button').forEach(b => b.classList.remove('selected'));
+                this.selectedTrap = null;
+            }
+
+            isOnPath(x, y) {
+                // パス上の判定（簡易版）
+                for (let i = 0; i < this.pathPoints.length - 1; i++) {
+                    const start = this.pathPoints[i];
+                    const end = this.pathPoints[i + 1];
+                    
+                    if (start.x === end.x) { // 垂直
+                        if (Math.abs(x - start.x) < 40 && 
+                            y >= Math.min(start.y, end.y) - 20 && 
+                            y <= Math.max(start.y, end.y) + 20) {
+                            return true;
+                        }
+                    } else { // 水平
+                        if (Math.abs(y - start.y) < 40 && 
+                            x >= Math.min(start.x, end.x) - 20 && 
+                            x <= Math.max(start.x, end.x) + 20) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            startWave() {
+                if (this.waveActive || this.gameOver) return;
+
+                // 特定のウェーブでストーリー表示
+                if (this.currentWave === 3) this.showStory('wave3');
+                else if (this.currentWave === 5) this.showStory('wave5');
+                else if (this.currentWave === 8) this.showStory('wave8');
+
+                this.waveActive = true;
+                document.getElementById('next-wave').disabled = true;
+
+                const waveConfig = this.getWaveConfig(this.currentWave);
+                this.spawnWave(waveConfig);
+                
+                // ウェーブ開始の演出メッセージ
+                this.showWaveMessage();
+            }
+
+            showWaveMessage() {
+                const messages = {
+                    1: '佐藤の魂が現れた！転生を阻止せよ！',
+                    2: '魂の数が増えている...警戒せよ',
+                    3: '魔王よ、決意を固めろ！未来を変えるのだ！',
+                    4: '時空の歪みが広がっている...',
+                    5: '魂が強化されている！魔力を結集せよ！',
+                    6: 'ポータルとの距離が縮まっている',
+                    7: '絶望的な状況だが、諦めるな！',
+                    8: '最後の攻防！全力で阻止せよ！',
+                    9: '運命の分かれ道...勝敗はここで決まる',
+                    10: '最終決戦！佐藤の転生を完全に阻止せよ！'
+                };
+
+                const message = messages[this.currentWave] || 'ウェーブ開始！';
+                
+                // メッセージ表示エフェクト
+                const messageDiv = document.createElement('div');
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(135deg, #8b0000, #dc143c);
+                    color: white;
+                    padding: 15px 30px;
+                    border-radius: 10px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    z-index: 1500;
+                    box-shadow: 0 0 30px rgba(139, 0, 0, 0.8);
+                    animation: wave-message 2s ease-in-out forwards;
+                `;
+                messageDiv.textContent = message;
+                document.body.appendChild(messageDiv);
+
+                // アニメーション用CSS追加
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes wave-message {
+                        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+                        20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                setTimeout(() => {
+                    messageDiv.remove();
+                    style.remove();
+                }, 2000);
+            }
+
+            getWaveConfig(wave) {
+                // 仕様書に基づいたウェーブ構成（敵数・種類・速度が増加）
+                const configs = {
+                    1: { weak: 6, normal: 0, strong: 0 }, // 初期ウェーブ専用
+                    2: { weak: 4, normal: 3, strong: 0 },
+                    3: { weak: 2, normal: 5, strong: 1 },
+                    4: { weak: 1, normal: 6, strong: 2 },
+                    5: { weak: 0, normal: 7, strong: 3 },
+                    6: { weak: 0, normal: 8, strong: 4 },
+                    7: { weak: 0, normal: 9, strong: 5 },
+                    8: { weak: 0, normal: 10, strong: 6 },
+                    9: { weak: 0, normal: 12, strong: 8 },
+                    10: { weak: 0, normal: 15, strong: 10 } // 最終ウェーブ
+                };
+                return configs[wave] || { weak: 0, normal: 5, strong: 3 };
+            }
+
+            spawnWave(config) {
+                let totalEnemies = Object.values(config).reduce((a, b) => a + b, 0);
+                let spawned = 0;
+
+                // ウェーブが進むとスポーン間隔を短縮
+                const spawnDelay = Math.max(300, 1000 - (this.currentWave * 50));
+
+                const spawnInterval = setInterval(() => {
+                    if (spawned >= totalEnemies) {
+                        clearInterval(spawnInterval);
+                        return;
+                    }
+
+                    // ランダムに敵タイプを選択
+                    const types = [];
+                    for (let type in config) {
+                        for (let i = 0; i < config[type]; i++) {
+                            types.push(type);
+                        }
+                    }
+
+                    if (types.length > 0) {
+                        const randomType = types.splice(Math.floor(Math.random() * types.length), 1)[0];
+                        config[randomType]--;
+                        this.spawnSoul(randomType);
+                        spawned++;
+                    }
+                }, spawnDelay);
+            }
+
+            spawnSoul(type) {
+                const soulData = this.soulTypes[type];
+                const soulElement = document.createElement('div');
+                soulElement.className = `soul ${soulData.class}`;
+                soulElement.innerHTML = '👻';
+                soulElement.style.left = '-30px';
+                soulElement.style.top = '55px';
+                document.getElementById('game-area').appendChild(soulElement);
+
+                const soul = {
+                    element: soulElement,
+                    type: type,
+                    hp: soulData.hp,
+                    maxHp: soulData.hp,
+                    speed: soulData.speed,
+                    reward: soulData.reward,
+                    x: -30,
+                    y: 55,
+                    pathIndex: 0,
+                    slowEffect: 0
+                };
+
+                this.souls.push(soul);
+                this.moveSoul(soul);
+            }
+
+            moveSoul(soul) {
+                const moveStep = () => {
+                    if (soul.hp <= 0 || this.gameOver) return;
+
+                    // 遅延効果の計算（2秒間半減）
+                    const currentSpeed = soul.slowEffect > Date.now() ? soul.speed / 2 : soul.speed;
+                    const target = this.pathPoints[soul.pathIndex + 1];
+                    
+                    if (!target) {
+                        // ポータル到達
+                        this.soulReachedPortal(soul);
+                        return;
+                    }
+
+                    const dx = target.x - soul.x;
+                    const dy = target.y - soul.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 5) {
+                        soul.pathIndex++;
+                        soul.x = target.x;
+                        soul.y = target.y;
+                    } else {
+                        // フレームレートに依存しない移動距離計算
+                        const moveDistance = currentSpeed / 60; // 60FPS想定
+                        soul.x += (dx / distance) * moveDistance;
+                        soul.y += (dy / distance) * moveDistance;
+                    }
+
+                    soul.element.style.left = soul.x - 15 + 'px';
+                    soul.element.style.top = soul.y - 15 + 'px';
+
+                    // 罠の効果をチェック
+                    this.checkTrapEffects(soul);
+
+                    requestAnimationFrame(moveStep);
+                };
+
+                moveStep();
+            }
+
+            checkTrapEffects(soul) {
+                this.traps.forEach(trap => {
+                    const distance = Math.sqrt(
+                        Math.pow(soul.x - trap.x, 2) + Math.pow(soul.y - trap.y, 2)
+                    );
+
+                    if (distance < 30) {
+                        const now = Date.now();
+
+                        switch (trap.type) {
+                            case 'slow':
+                                // 遅延フィールド：速度を半減（2秒間）
+                                soul.slowEffect = now + 2000;
+                                break;
+                            
+                            case 'spike':
+                                // スパイク罠：定期的に小ダメージ（1秒間隔）
+                                if (now - trap.lastActivation > 1000) {
+                                    this.damageSoul(soul, 2);
+                                    trap.lastActivation = now;
+                                }
+                                break;
+                            
+                            case 'bomb':
+                                // 爆発罠：一定時間後に範囲ダメージ（3秒間隔）
+                                if (now - trap.lastActivation > 3000) {
+                                    this.explode(trap);
+                                    trap.lastActivation = now;
+                                }
+                                break;
+                        }
+                    }
+                });
+            }
+
+            damageSoul(soul, damage) {
+                soul.hp -= damage;
+                
+                // ダメージテキスト表示
+                const damageText = document.createElement('div');
+                damageText.className = 'damage-text';
+                damageText.innerHTML = `-${damage}`;
+                damageText.style.left = soul.x + 'px';
+                damageText.style.top = soul.y - 20 + 'px';
+                document.getElementById('game-area').appendChild(damageText);
+
+                setTimeout(() => damageText.remove(), 1000);
+
+                if (soul.hp <= 0) {
+                    // ソウル撃破で魔力回復
+                    this.mana += soul.reward;
+                    this.updateUI();
+                    this.removeSoul(soul);
+                    
+                    // 魔力獲得エフェクト
+                    this.showManaGain(soul.x, soul.y, soul.reward);
+                }
+            }
+            
+            showManaGain(x, y, amount) {
+                const manaText = document.createElement('div');
+                manaText.style.cssText = `
+                    position: absolute;
+                    left: ${x}px;
+                    top: ${y - 30}px;
+                    color: #87ceeb;
+                    font-weight: bold;
+                    font-size: 14px;
+                    pointer-events: none;
+                    z-index: 200;
+                    animation: mana-gain 1s ease-out forwards;
+                `;
+                manaText.textContent = `+${amount}魔力`;
+                document.getElementById('game-area').appendChild(manaText);
+
+                // アニメーション用CSS追加
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes mana-gain {
+                        0% { opacity: 1; transform: translateY(0); }
+                        100% { opacity: 0; transform: translateY(-30px); }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                setTimeout(() => {
+                    manaText.remove();
+                    style.remove();
+                }, 1000);
+            }
+
+            explode(trap) {
+                // 爆発エフェクト
+                const explosion = document.createElement('div');
+                explosion.className = 'explosion';
+                explosion.style.left = trap.x - 40 + 'px';
+                explosion.style.top = trap.y - 40 + 'px';
+                document.getElementById('game-area').appendChild(explosion);
+
+                setTimeout(() => explosion.remove(), 300);
+
+                // 範囲内の敵にダメージ（爆発罠は強力）
+                this.souls.forEach(soul => {
+                    const distance = Math.sqrt(
+                        Math.pow(soul.x - trap.x, 2) + Math.pow(soul.y - trap.y, 2)
+                    );
+                    if (distance < 60) {
+                        this.damageSoul(soul, 10); // 爆発ダメージを増加
+                    }
+                });
+            }
+
+            removeSoul(soul) {
+                const index = this.souls.indexOf(soul);
+                if (index > -1) {
+                    this.souls.splice(index, 1);
+                    soul.element.remove();
+                }
+
+                if (this.souls.length === 0 && this.waveActive) {
+                    this.waveActive = false;
+                    this.currentWave++;
+                    
+                    // ウェーブクリアボーナス（魔力回復）
+                    this.mana += 20;
+                    this.updateUI();
+                    
+                    if (this.currentWave > this.maxWaves) {
+                        this.showStory('victory');
+                        setTimeout(() => {
+                            this.endGame(true);
+                        }, 3000);
+                    } else {
+                        document.getElementById('next-wave').disabled = false;
+                        this.updateStoryProgress();
+                        
+                        // ウェーブクリア時のメッセージ
+                        this.showClearMessage();
+                    }
+                }
+            }
+
+            showClearMessage() {
+                const clearMessages = {
+                    1: '第一波を阻止！だが、これは始まりに過ぎない...',
+                    2: '魂の群れを退けた！しかし佐藤の意志は強い',
+                    3: '魔王の決意が試される！時空魔法を強化せよ',
+                    4: '半分まで来た...油断するな',
+                    5: '魔力の共鳴を感じる...さらなる試練が待つ',
+                    6: '残り4波！ポータルを死守せよ',
+                    7: '絶望的な状況を乗り切った！',
+                    8: '最後の攻防を制した！あと2波だ',
+                    9: '最終波まであと僅か！運命を変えろ！'
+                };
+
+                const message = clearMessages[this.currentWave - 1];
+                if (message) {
+                    setTimeout(() => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.style.cssText = `
+                            position: fixed;
+                            top: 30%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            background: linear-gradient(135deg, #228b22, #32cd32);
+                            color: white;
+                            padding: 12px 25px;
+                            border-radius: 8px;
+                            font-size: 16px;
+                            z-index: 1500;
+                            box-shadow: 0 0 20px rgba(34, 139, 34, 0.8);
+                            animation: clear-message 3s ease-in-out forwards;
+                        `;
+                        messageDiv.textContent = message;
+                        document.body.appendChild(messageDiv);
+
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            @keyframes clear-message {
+                                0% { opacity: 0; transform: translate(-50%, -50%) translateY(-20px); }
+                                15% { opacity: 1; transform: translate(-50%, -50%) translateY(0px); }
+                                85% { opacity: 1; transform: translate(-50%, -50%) translateY(0px); }
+                                100% { opacity: 0; transform: translate(-50%, -50%) translateY(20px); }
+                            }
+                        `;
+                        document.head.appendChild(style);
+
+                        setTimeout(() => {
+                            messageDiv.remove();
+                            style.remove();
+                        }, 3000);
+                    }, 500);
+                }
+            }
+
+            updateUI() {
+                document.getElementById('mana').textContent = this.mana;
+                document.getElementById('portal-health').textContent = this.portalHealth;
+                document.getElementById('current-wave').textContent = this.currentWave;
+
+                // ストーリー進行状況更新
+                this.updateStoryProgress();
+
+                // 罠ボタンの有効/無効と説明文更新
+                document.querySelectorAll('.trap-button').forEach(button => {
+                    const cost = parseInt(button.dataset.cost);
+                    const trapType = button.dataset.trap;
+                    const trapData = this.trapTypes[trapType];
+                    
+                    // ボタンテキストを更新
+                    button.innerHTML = `
+                        <div>${trapData.name}</div>
+                        <div class="trap-cost">コスト: ${cost}</div>
+                    `;
+                    
+                    if (this.mana < cost) {
+                        button.style.opacity = '0.5';
+                        button.style.cursor = 'not-allowed';
+                    } else {
+                        button.style.opacity = '1';
+                        button.style.cursor = 'pointer';
+                    }
+                });
+            }
+
+            endGame(victory) {
+                this.gameOver = true;
+                
+                // ストーリー表示後にゲームオーバー画面
+                setTimeout(() => {
+                    const gameOverDiv = document.createElement('div');
+                    gameOverDiv.className = `game-over ${victory ? 'victory' : 'defeat'}`;
+                    
+                    const title = victory ? '完全勝利！' : '運命には逆らえず...';
+                    const storyMessage = victory ? 
+                        this.storyData.victory.message : 
+                        this.storyData.defeat.message;
+                    
+                    gameOverDiv.innerHTML = `
+                        <div class="story-character">${victory ? '👑' : '😈'}</div>
+                        <h2>${title}</h2>
+                        <p style="text-align: center; font-size: 18px; margin: 20px 0; max-width: 500px; line-height: 1.6;">
+                            ${storyMessage}
+                        </p>
+                        <p style="text-align: center; font-size: 14px; margin-bottom: 20px; color: #aaa;">
+                            到達ウェーブ: ${victory ? this.maxWaves : this.currentWave} | 
+                            残存魔力: ${this.mana} | 
+                            ポータル耐久: ${this.portalHealth}
+                        </p>
+                        <button class="restart-button" onclick="location.reload()">
+                            ${victory ? '新たな時間線へ' : '時を巻き戻す'}
+                        </button>
+                    `;
+                    
+                    document.body.appendChild(gameOverDiv);
+                }, victory ? 0 : 1000);
+                
+                // 敗北時は特別な演出
+                if (!victory) {
+                    this.showStory('defeat');
+                }
+            }
+
+            // ポータル到達時の特別演出
+            soulReachedPortal(soul) {
+                // ポータル到達エフェクト
+                const portalElement = document.getElementById('portal');
+                portalElement.style.animation = 'portal-damage 0.5s ease-in-out';
+                
+                // 魂がポータルに吸い込まれる演出
+                soul.element.style.transition = 'all 0.5s ease-in';
+                soul.element.style.transform = 'scale(0)';
+                soul.element.style.opacity = '0';
+                
+                // ダメージメッセージ
+                const damageMessage = document.createElement('div');
+                damageMessage.style.cssText = `
+                    position: fixed;
+                    top: 25%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(135deg, #dc143c, #8b0000);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    z-index: 1500;
+                    box-shadow: 0 0 20px rgba(220, 20, 60, 0.8);
+                    animation: damage-warning 2s ease-in-out forwards;
+                `;
+                damageMessage.textContent = `佐藤の魂がポータルに到達！耐久-1`;
+                document.body.appendChild(damageMessage);
+
+                // アニメーション追加
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes portal-damage {
+                        0% { transform: translateY(-50%) scale(1); }
+                        50% { transform: translateY(-50%) scale(1.2); box-shadow: 0 0 60px rgba(138, 43, 226, 1); }
+                        100% { transform: translateY(-50%) scale(1); }
+                    }
+                    @keyframes damage-warning {
+                        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                        20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                setTimeout(() => {
+                    damageMessage.remove();
+                    style.remove();
+                    portalElement.style.animation = '';
+                }, 2000);
+
+                this.portalHealth--;
+                this.updateUI();
+                this.removeSoul(soul);
+                
+                if (this.portalHealth <= 0) {
+                    this.endGame(false);
+                }
+            }
+        }
+
+        // ゲーム開始
+        document.addEventListener('DOMContentLoaded', () => {
+            new Game();
+        });
+    </script>
+</body>
+</html>
