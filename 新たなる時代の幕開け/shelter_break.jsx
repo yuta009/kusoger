@@ -24,7 +24,7 @@ const ENEMY_SPRITES = {
 };
 
 const UPGRADE_KILL_INTERVAL = 18;
-const GAME_VERSION = '0.1.1';
+const GAME_VERSION = '0.1.2';
 
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
@@ -41,7 +41,7 @@ const ShelterBreak = () => {
       y: 300,
       hp: 100,
       maxHP: 100,
-      speed: 3.5,
+      speed: 4,
       attackRange: 120,
       attackDamage: 40,
       attackSpeed: 40, // frames
@@ -77,7 +77,7 @@ const ShelterBreak = () => {
       y: 300,
       hp: 100,
       maxHP: 100,
-      speed: 3.5,
+      speed: 4,
       attackRange: 120,
       attackDamage: 40,
       attackSpeed: 40,
@@ -172,6 +172,9 @@ const ShelterBreak = () => {
       size = 40;
     }
     if (family === 3 && evolutionStage === 1) {
+      hp *= 0.8;
+    }
+    if (family === 4 && evolutionStage === 1) {
       hp *= 0.8;
     }
     if (wave <= 2) {
@@ -493,6 +496,10 @@ const ShelterBreak = () => {
               data.currentWave++;
               data.killsThisWave = 0;
               data.waveKillTarget = Math.floor(data.waveKillTarget * 1.2);
+              data.player.hp = Math.min(
+                data.player.maxHP,
+                data.player.hp + data.player.maxHP * 0.2
+              );
               setWave(data.currentWave);
               
               if (data.currentWave > 10) {
