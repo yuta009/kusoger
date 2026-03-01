@@ -697,12 +697,14 @@ const ShelterBreak = () => {
     // Player
     const playerSprite = data.images.player;
     if (playerSprite && playerSprite.complete) {
+      const playerSize = 40;
+      const halfSize = playerSize / 2;
       ctx.drawImage(
         playerSprite,
-        data.player.x - 16,
-        data.player.y - 16,
-        32,
-        32
+        data.player.x - halfSize,
+        data.player.y - halfSize,
+        playerSize,
+        playerSize
       );
     } else {
       ctx.fillStyle = '#ff0055';
