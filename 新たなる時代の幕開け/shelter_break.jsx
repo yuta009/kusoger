@@ -61,7 +61,7 @@ const ShelterBreak = () => {
     frame: 0,
     enemySpawnFrame: 0,
     spawnIndex: 0,
-    enemySpawnRate: 50,
+    enemySpawnRate: 80,
     killsThisWave: 0,
     totalKills: 0,
     waveKillTarget: 18,
@@ -139,7 +139,7 @@ const ShelterBreak = () => {
     let hp = 20 * (1 + wave * 0.2);
     let speed = 1 + Math.random() * 0.5;
     let color = '#ff4444';
-    let size = 34;
+    let size = 24;
     // Enemies always move toward shelter; player is attacked via ranged/melee only
     
     if (wave <= 2) {
@@ -158,17 +158,17 @@ const ShelterBreak = () => {
       hp = 80 * (1 + wave * 0.3);
       speed = 0.6;
       color = '#444444';
-      size = 38;
+      size = 30;
     } else if (enemyType === 'fast') {
       hp = 40 * (1 + wave * 0.2);
       speed = 2 + Math.random();
       color = '#44ff44';
-      size = 32;
+      size = 26;
     } else if (enemyType === 'boss') {
       hp = 500 * (1 + wave * 0.5);
       speed = 0.9;
       color = '#ff44ff';
-      size = 54;
+      size = 40;
     }
     if (wave <= 2) {
       hp = 20;
@@ -589,7 +589,7 @@ const ShelterBreak = () => {
     
     // Spawn enemies
     data.enemySpawnFrame++;
-    const spawnRate = Math.max(10, data.enemySpawnRate - data.currentWave * 10);
+    const spawnRate = Math.max(20, data.enemySpawnRate - data.currentWave * 8);
     if (data.enemySpawnFrame >= spawnRate) {
       spawnEnemy(data.currentWave);
       data.enemySpawnFrame = 0;
@@ -713,7 +713,7 @@ const ShelterBreak = () => {
     // Player
     const playerSprite = data.images.player;
     if (playerSprite && playerSprite.complete) {
-      const playerSize = 72;
+      const playerSize = 52;
       const halfSize = playerSize / 2;
       ctx.drawImage(
         playerSprite,
@@ -723,7 +723,7 @@ const ShelterBreak = () => {
         playerSize
       );
     } else {
-      const playerRadius = 36;
+      const playerRadius = 26;
       ctx.fillStyle = '#ff0055';
       ctx.beginPath();
       ctx.arc(data.player.x, data.player.y, playerRadius, 0, Math.PI * 2);
@@ -735,9 +735,9 @@ const ShelterBreak = () => {
     
     // Player HP bar
     ctx.fillStyle = '#ff0000';
-    ctx.fillRect(data.player.x - 36, data.player.y - 44, 72, 5);
+    ctx.fillRect(data.player.x - 26, data.player.y - 36, 52, 4);
     ctx.fillStyle = '#00ff00';
-    ctx.fillRect(data.player.x - 36, data.player.y - 44, 72 * (data.player.hp / data.player.maxHP), 5);
+    ctx.fillRect(data.player.x - 26, data.player.y - 36, 52 * (data.player.hp / data.player.maxHP), 4);
   };
 
   useEffect(() => {
@@ -822,6 +822,9 @@ const ShelterBreak = () => {
             <p>操作: WASD / 矢印キー = 移動</p>
             <p>攻撃は自動 / 強化で戦闘力を上げろ！</p>
           </div>
+        </div>
+        <div className="absolute bottom-3 right-3 text-xs text-white/70 bg-black/60 px-2 py-1 rounded">
+          Version: 0.1.0
         </div>
       </div>
     );
