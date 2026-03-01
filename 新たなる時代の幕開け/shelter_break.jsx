@@ -58,10 +58,10 @@ const ShelterBreak = () => {
     keys: {},
     frame: 0,
     enemySpawnFrame: 0,
-    enemySpawnRate: 90,
+    enemySpawnRate: 50,
     killsThisWave: 0,
     totalKills: 0,
-    waveKillTarget: 12,
+    waveKillTarget: 18,
     currentWave: 1,
     specialAttackCooldown: 0
   });
@@ -94,7 +94,7 @@ const ShelterBreak = () => {
     data.killsThisWave = 0;
     data.totalKills = 0;
     data.currentWave = 1;
-    data.waveKillTarget = 12;
+    data.waveKillTarget = 18;
     
     setGameState('playing');
     setWave(1);
@@ -135,7 +135,7 @@ const ShelterBreak = () => {
     let hp = 20 * (1 + wave * 0.2);
     let speed = 1 + Math.random() * 0.5;
     let color = '#ff4444';
-    let size = 18;
+    let size = 34;
     // Enemies always move toward shelter; player is attacked via ranged/melee only
     
     if (Math.random() < 0.2) {
@@ -143,19 +143,22 @@ const ShelterBreak = () => {
       hp = 80 * (1 + wave * 0.3);
       speed = 0.6;
       color = '#444444';
-      size = 22;
+      size = 38;
     } else if (Math.random() < 0.15) {
       enemyType = 'fast';
       hp = 40 * (1 + wave * 0.2);
       speed = 2 + Math.random();
       color = '#44ff44';
-      size = 16;
+      size = 32;
     } else if (wave > 3 && Math.random() < 0.08) {
       enemyType = 'boss';
       hp = 500 * (1 + wave * 0.5);
       speed = 0.9;
       color = '#ff44ff';
-      size = 32;
+      size = 54;
+    }
+    if (wave <= 2) {
+      hp = 20;
     }
     const family = getEnemyFamilyFromType(enemyType);
     const evolutionStage = getEvolutionStage(wave);
@@ -573,7 +576,7 @@ const ShelterBreak = () => {
     
     // Spawn enemies
     data.enemySpawnFrame++;
-    const spawnRate = Math.max(20, data.enemySpawnRate - data.currentWave * 8);
+    const spawnRate = Math.max(10, data.enemySpawnRate - data.currentWave * 10);
     if (data.enemySpawnFrame >= spawnRate) {
       spawnEnemy(data.currentWave);
       data.enemySpawnFrame = 0;
@@ -697,7 +700,7 @@ const ShelterBreak = () => {
     // Player
     const playerSprite = data.images.player;
     if (playerSprite && playerSprite.complete) {
-      const playerSize = 40;
+      const playerSize = 72;
       const halfSize = playerSize / 2;
       ctx.drawImage(
         playerSprite,
@@ -707,9 +710,10 @@ const ShelterBreak = () => {
         playerSize
       );
     } else {
+      const playerRadius = 36;
       ctx.fillStyle = '#ff0055';
       ctx.beginPath();
-      ctx.arc(data.player.x, data.player.y, 16, 0, Math.PI * 2);
+      ctx.arc(data.player.x, data.player.y, playerRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
@@ -718,9 +722,9 @@ const ShelterBreak = () => {
     
     // Player HP bar
     ctx.fillStyle = '#ff0000';
-    ctx.fillRect(data.player.x - 20, data.player.y - 30, 40, 4);
+    ctx.fillRect(data.player.x - 36, data.player.y - 44, 72, 5);
     ctx.fillStyle = '#00ff00';
-    ctx.fillRect(data.player.x - 20, data.player.y - 30, 40 * (data.player.hp / data.player.maxHP), 4);
+    ctx.fillRect(data.player.x - 36, data.player.y - 44, 72 * (data.player.hp / data.player.maxHP), 5);
   };
 
   useEffect(() => {
