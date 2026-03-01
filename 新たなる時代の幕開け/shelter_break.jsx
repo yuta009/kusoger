@@ -24,12 +24,19 @@ const ENEMY_SPRITES = {
 };
 
 const UPGRADE_KILL_INTERVAL = 18;
+const PLAYER_EXP_PER_EVOLUTION = [3, 6, 10, 14];
+const PLAYER_EXP_TO_NEXT_BASE = 25;
+const PLAYER_EXP_GROWTH_RATE = 1.3;
+const PLAYER_EXP_GROWTH_FLAT = 2;
 const GAME_VERSION = '0.1.2';
 
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('title'); // title, playing, upgrade, gameover, victory
   const [wave, setWave] = useState(1);
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const [playerExp, setPlayerExp] = useState(0);
+  const [expToNext, setExpToNext] = useState(PLAYER_EXP_TO_NEXT_BASE);
   const [shelterHP, setShelterHP] = useState(1000);
   const [killCount, setKillCount] = useState(0);
   const [score, setScore] = useState(0);
@@ -41,7 +48,7 @@ const ShelterBreak = () => {
       y: 300,
       hp: 100,
       maxHP: 100,
-      speed: 4,
+      speed: 4.5,
       attackRange: 120,
       attackDamage: 40,
       attackSpeed: 40, // frames
@@ -65,7 +72,9 @@ const ShelterBreak = () => {
     enemySpawnRate: 110,
     killsThisWave: 0,
     totalKills: 0,
-    waveKillTarget: 18,
+    playerExp: 0,
+    expToNext: PLAYER_EXP_TO_NEXT_BASE,
+    waveKillTarget: 14,
     currentWave: 1,
     specialAttackCooldown: 0
   });
@@ -77,7 +86,7 @@ const ShelterBreak = () => {
       y: 300,
       hp: 100,
       maxHP: 100,
-      speed: 4,
+      speed: 4.5,
       attackRange: 120,
       attackDamage: 40,
       attackSpeed: 40,
@@ -98,11 +107,16 @@ const ShelterBreak = () => {
     data.spawnIndex = 0;
     data.killsThisWave = 0;
     data.totalKills = 0;
+    data.playerExp = 0;
+    data.expToNext = PLAYER_EXP_TO_NEXT_BASE;
     data.currentWave = 1;
-    data.waveKillTarget = 18;
+    data.waveKillTarget = 14;
     
     setGameState('playing');
     setWave(1);
+    setPlayerLevel(1);
+    setPlayerExp(0);
+    setExpToNext(PLAYER_EXP_TO_NEXT_BASE);
     setShelterHP(1000);
     setKillCount(0);
     setScore(0);
@@ -175,7 +189,7 @@ const ShelterBreak = () => {
       hp *= 0.8;
     }
     if (family === 4 && evolutionStage === 1) {
-      hp *= 0.8;
+      hp *= 0.7;
     }
     if (wave <= 2) {
       hp = 20;
@@ -484,6 +498,10 @@ const ShelterBreak = () => {
             data.totalKills++;
             setKillCount(data.totalKills);
             setScore(s => s + 100);
+            addPlayerExp(data, enemy.evolutionStage);
+            if (data.totalKills % PLAYER_LEVEL_KILL_INTERVAL === 0) {
+              setPlayerLevel(level => level + 1);
+            }
             
             // Check for upgrade
             if (data.totalKills % UPGRADE_KILL_INTERVAL === 0) {
@@ -496,6 +514,9 @@ const ShelterBreak = () => {
               data.currentWave++;
               data.killsThisWave = 0;
               data.waveKillTarget = Math.floor(data.waveKillTarget * 1.2);
+              if (data.currentWave <= 3) {
+                data.waveKillTarget = Math.max(10, Math.floor(data.waveKillTarget * 0.8));
+              }
               data.player.hp = Math.min(
                 data.player.maxHP,
                 data.player.hp + data.player.maxHP * 0.2
@@ -519,6 +540,19 @@ const ShelterBreak = () => {
         bullets.splice(i, 1);
       }
     }
+  };
+
+  const addPlayerExp = (data, evolutionStage) => {
+    const expGain =
+      PLAYER_EXP_PER_EVOLUTION[Math.min(evolutionStage, PLAYER_EXP_PER_EVOLUTION.length - 1)];
+    data.playerExp += expGain;
+    while (data.playerExp >= data.expToNext) {
+      data.playerExp -= data.expToNext;
+      data.expToNext = Math.floor(data.expToNext * PLAYER_EXP_GROWTH_RATE) + PLAYER_EXP_GROWTH_FLAT;
+      setPlayerLevel(level => level + 1);
+    }
+    setPlayerExp(data.playerExp);
+    setExpToNext(data.expToNext);
   };
 
   const createExplosion = (data, x, y, radius, damage) => {
@@ -806,6 +840,9 @@ const ShelterBreak = () => {
   if (gameState === 'title') {
     return (
       <div className="w-full h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-black flex flex-col items-center justify-center text-white relative overflow-hidden">
+        <div className="absolute top-3 right-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
+          Level: {playerLevel}
+        </div>
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl animate-pulse"></div>
@@ -853,7 +890,10 @@ const ShelterBreak = () => {
 
   if (gameState === 'upgrade') {
     return (
-      <div className="w-full h-screen bg-black bg-opacity-90 flex items-center justify-center text-white">
+      <div className="w-full h-screen bg-black bg-opacity-90 flex items-center justify-center text-white relative">
+        <div className="absolute top-3 right-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
+          Level: {playerLevel}
+        </div>
         <div className="text-center space-y-8 max-w-4xl px-4">
           <h2 className="text-5xl font-bold text-yellow-400 mb-8">⚡ 強化選択 ⚡</h2>
           
@@ -877,7 +917,10 @@ const ShelterBreak = () => {
 
   if (gameState === 'gameover') {
     return (
-      <div className="w-full h-screen bg-gradient-to-b from-red-900 to-black flex flex-col items-center justify-center text-white">
+      <div className="w-full h-screen bg-gradient-to-b from-red-900 to-black flex flex-col items-center justify-center text-white relative">
+        <div className="absolute top-3 right-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
+          Level: {playerLevel}
+        </div>
         <div className="text-center space-y-6">
           <h2 className="text-6xl font-bold mb-8 text-red-500">💥 GAME OVER 💥</h2>
           
@@ -901,7 +944,10 @@ const ShelterBreak = () => {
 
   if (gameState === 'victory') {
     return (
-      <div className="w-full h-screen bg-gradient-to-b from-yellow-900 to-black flex flex-col items-center justify-center text-white">
+      <div className="w-full h-screen bg-gradient-to-b from-yellow-900 to-black flex flex-col items-center justify-center text-white relative">
+        <div className="absolute top-3 right-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
+          Level: {playerLevel}
+        </div>
         <div className="text-center space-y-6">
           <h2 className="text-6xl font-bold mb-8 text-yellow-400">🎉 VICTORY 🎉</h2>
           
@@ -942,7 +988,7 @@ const ShelterBreak = () => {
         
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-bold">Level: {wave}</span>
+            <span className="font-bold">Level: {playerLevel}</span>
           </div>
           <div className="flex items-center gap-2">
             <Zap className="text-yellow-400" />
