@@ -23,6 +23,8 @@ const ENEMY_SPRITES = {
   4: { 0: ['enemy_4_1.jpg'], 1: ['enemy_4_2.jpg'], 2: ['enemy_4_3.jpg'], 3: ['enemy_4_3.jpg'] }
 };
 
+const UPGRADE_KILL_INTERVAL = 18;
+
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('title'); // title, playing, upgrade, gameover, victory
@@ -40,7 +42,7 @@ const ShelterBreak = () => {
       maxHP: 100,
       speed: 3,
       attackRange: 120,
-      attackDamage: 20,
+      attackDamage: 40,
       attackSpeed: 60, // frames
       attackType: 'normal',
       piercing: 0,
@@ -58,6 +60,7 @@ const ShelterBreak = () => {
     keys: {},
     frame: 0,
     enemySpawnFrame: 0,
+    spawnIndex: 0,
     enemySpawnRate: 50,
     killsThisWave: 0,
     totalKills: 0,
@@ -75,7 +78,7 @@ const ShelterBreak = () => {
       maxHP: 100,
       speed: 3,
       attackRange: 120,
-      attackDamage: 20,
+      attackDamage: 40,
       attackSpeed: 60,
       attackType: 'normal',
       piercing: 0,
@@ -91,6 +94,7 @@ const ShelterBreak = () => {
     data.effects = [];
     data.frame = 0;
     data.enemySpawnFrame = 0;
+    data.spawnIndex = 0;
     data.killsThisWave = 0;
     data.totalKills = 0;
     data.currentWave = 1;
@@ -138,20 +142,29 @@ const ShelterBreak = () => {
     let size = 34;
     // Enemies always move toward shelter; player is attacked via ranged/melee only
     
-    if (Math.random() < 0.2) {
+    if (wave <= 2) {
+      const cycleTypes = ['small', 'heavy', 'fast'];
+      enemyType = cycleTypes[data.spawnIndex % cycleTypes.length];
+      data.spawnIndex += 1;
+    } else if (Math.random() < 0.2) {
       enemyType = 'heavy';
+    } else if (Math.random() < 0.15) {
+      enemyType = 'fast';
+    } else if (wave > 3 && Math.random() < 0.08) {
+      enemyType = 'boss';
+    }
+
+    if (enemyType === 'heavy') {
       hp = 80 * (1 + wave * 0.3);
       speed = 0.6;
       color = '#444444';
       size = 38;
-    } else if (Math.random() < 0.15) {
-      enemyType = 'fast';
+    } else if (enemyType === 'fast') {
       hp = 40 * (1 + wave * 0.2);
       speed = 2 + Math.random();
       color = '#44ff44';
       size = 32;
-    } else if (wave > 3 && Math.random() < 0.08) {
-      enemyType = 'boss';
+    } else if (enemyType === 'boss') {
       hp = 500 * (1 + wave * 0.5);
       speed = 0.9;
       color = '#ff44ff';
@@ -463,7 +476,7 @@ const ShelterBreak = () => {
             setScore(s => s + 100);
             
             // Check for upgrade
-            if (data.totalKills % 15 === 0) {
+            if (data.totalKills % UPGRADE_KILL_INTERVAL === 0) {
               generateUpgrades();
               setGameState('upgrade');
             }
@@ -929,7 +942,7 @@ const ShelterBreak = () => {
 
       {/* Controls */}
       <div className="w-full bg-gray-900 p-4 text-white text-center">
-        <p className="text-sm">WASD / 矢印キー: 移動 | 攻撃: 自動 | 次の強化まで: {15 - (killCount % 15)}体</p>
+        <p className="text-sm">WASD / 矢印キー: 移動 | 攻撃: 自動 | 次の強化まで: {UPGRADE_KILL_INTERVAL - (killCount % UPGRADE_KILL_INTERVAL)}体</p>
       </div>
     </div>
   );
