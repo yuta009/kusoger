@@ -13,13 +13,14 @@ const RotateCcw = (props) => <Icon label="🔄" {...props} />;
 const Play = (props) => <Icon label="▶️" {...props} />;
 
 const IMAGE_PATHS = {
-  player: './pic/protagonist_F.jpg',
-  enemies: {
-    small: ['enemy_1_1.jpg', 'enemy_1_2.jpg', 'enemy_1_3.jpg', 'enemy_1_4.jpg'],
-    heavy: ['enemy_2_1.jpg', 'enemy_2_2.jpg', 'enemy_2_3.jpg', 'enemy_2_4.jpg'],
-    fast: ['enemy_3_1.jpg', 'enemy_3_2.jpg', 'enemy_3_3.jpg'],
-    boss: ['enemy_4_1.jpg', 'enemy_4_2.jpg', 'enemy_4_3.jpg']
-  }
+  player: './pic/protagonist_F.jpg'
+};
+
+const ENEMY_SPRITES = {
+  1: { 0: ['enemy_1_1.jpg'], 1: ['enemy_1_2.jpg'], 2: ['enemy_1_3.jpg'], 3: ['enemy_1_4.jpg'] },
+  2: { 0: ['enemy_2_1.jpg'], 1: ['enemy_2_2.jpg'], 2: ['enemy_2_3.jpg'], 3: ['enemy_2_4.jpg'] },
+  3: { 0: ['enemy_3_1.jpg'], 1: ['enemy_3_2.jpg'], 2: ['enemy_3_3.jpg'], 3: ['enemy_3_3.jpg'] },
+  4: { 0: ['enemy_4_1.jpg'], 1: ['enemy_4_2.jpg'], 2: ['enemy_4_3.jpg'], 3: ['enemy_4_3.jpg'] }
 };
 
 const ShelterBreak = () => {
@@ -45,11 +46,13 @@ const ShelterBreak = () => {
       piercing: 0,
       explosionRadius: 0,
       bulletCount: 1,
-      attackFrame: 0
+      attackFrame: 0,
+      slowUntil: 0
     },
     shelter: { x: 400, y: 300, hp: 1000, maxHP: 1000, radius: 32 },
     enemies: [],
     bullets: [],
+    enemyBullets: [],
     effects: [],
     images: {},
     keys: {},
@@ -78,11 +81,13 @@ const ShelterBreak = () => {
       piercing: 0,
       explosionRadius: 0,
       bulletCount: 1,
-      attackFrame: 0
+      attackFrame: 0,
+      slowUntil: 0
     };
     data.shelter = { x: 400, y: 300, hp: 1000, maxHP: 1000, radius: 32 };
     data.enemies = [];
     data.bullets = [];
+    data.enemyBullets = [];
     data.effects = [];
     data.frame = 0;
     data.enemySpawnFrame = 0;
@@ -98,6 +103,27 @@ const ShelterBreak = () => {
     setScore(0);
   };
 
+  const getEvolutionStage = (wave) => {
+    if (wave <= 2) return 0;
+    if (wave <= 4) return 1;
+    if (wave <= 7) return 2;
+    return 3;
+  };
+
+  const getEnemyFamilyFromType = (enemyType) => {
+    switch (enemyType) {
+      case 'heavy':
+        return 2;
+      case 'fast':
+        return 3;
+      case 'boss':
+        return 4;
+      case 'small':
+      default:
+        return 1;
+    }
+  };
+
   const spawnEnemy = (wave) => {
     const data = gameDataRef.current;
     const angle = Math.random() * Math.PI * 2;
@@ -110,7 +136,7 @@ const ShelterBreak = () => {
     let speed = 1 + Math.random() * 0.5;
     let color = '#ff4444';
     let size = 12;
-    let targetPlayer = Math.random() < 0.3;
+    let targetPlayer = false;
     
     if (wave > 2 && Math.random() < 0.2) {
       enemyType = 'heavy';
@@ -124,7 +150,6 @@ const ShelterBreak = () => {
       speed = 2 + Math.random();
       color = '#44ff44';
       size = 10;
-      targetPlayer = true;
     } else if (wave > 6 && Math.random() < 0.1) {
       enemyType = 'boss';
       hp = 500 * (1 + wave * 0.5);
@@ -132,7 +157,9 @@ const ShelterBreak = () => {
       color = '#ff44ff';
       size = 24;
     }
-    const spriteList = IMAGE_PATHS.enemies[enemyType] || [];
+    const family = getEnemyFamilyFromType(enemyType);
+    const evolutionStage = getEvolutionStage(wave);
+    const spriteList = (ENEMY_SPRITES[family] && ENEMY_SPRITES[family][evolutionStage]) || [];
     const spriteFile = spriteList.length
       ? spriteList[Math.floor(Math.random() * spriteList.length)]
       : null;
@@ -147,7 +174,10 @@ const ShelterBreak = () => {
       size,
       enemyType,
       targetPlayer,
-      spriteKey: spriteFile ? `enemy:${spriteFile}` : null
+      spriteKey: spriteFile ? `enemy:${spriteFile}` : null,
+      family,
+      evolutionStage,
+      attackCooldown: 0
     });
   };
 
@@ -164,8 +194,10 @@ const ShelterBreak = () => {
       const len = Math.sqrt(dx * dx + dy * dy);
       dx /= len;
       dy /= len;
-      player.x += dx * player.speed;
-      player.y += dy * player.speed;
+      const slowFactor = data.frame < player.slowUntil ? 0.5 : 1;
+      const currentSpeed = player.speed * slowFactor;
+      player.x += dx * currentSpeed;
+      player.y += dy * currentSpeed;
       
       player.x = Math.max(50, Math.min(750, player.x));
       player.y = Math.max(50, Math.min(550, player.y));
@@ -226,15 +258,14 @@ const ShelterBreak = () => {
     const { enemies, player, shelter } = data;
     
     enemies.forEach(enemy => {
-      const target = enemy.targetPlayer ? player : shelter;
-      const dx = target.x - enemy.x;
-      const dy = target.y - enemy.y;
+      const dx = shelter.x - enemy.x;
+      const dy = shelter.y - enemy.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       
-      if (dist > (enemy.targetPlayer ? 20 : shelter.radius)) {
+      if (dist > shelter.radius) {
         enemy.x += (dx / dist) * enemy.speed;
         enemy.y += (dy / dist) * enemy.speed;
-      } else if (!enemy.targetPlayer) {
+      } else {
         // Attack shelter
         if (data.frame % 60 === 0) {
           shelter.hp -= 10 * (1 + data.currentWave * 0.1);
@@ -243,16 +274,158 @@ const ShelterBreak = () => {
             setGameState('gameover');
           }
         }
-      } else {
-        // Attack player
-        if (data.frame % 60 === 0) {
-          player.hp -= 5;
-          if (player.hp <= 0) {
-            setGameState('gameover');
-          }
+      }
+
+      // Enemy_4 melee (club) damage on contact for evolution 1+
+      if (enemy.family === 4 && enemy.evolutionStage > 0) {
+        const pdx = player.x - enemy.x;
+        const pdy = player.y - enemy.y;
+        const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
+        if (pdist < enemy.size + 14 && data.frame % 30 === 0) {
+          damagePlayer(data, 8 + enemy.evolutionStage * 2);
         }
       }
     });
+  };
+
+  const damagePlayer = (data, amount) => {
+    const { player } = data;
+    player.hp -= amount;
+    if (player.hp <= 0) {
+      setGameState('gameover');
+    }
+  };
+
+  const applySlow = (data, frames) => {
+    data.player.slowUntil = Math.max(data.player.slowUntil, data.frame + frames);
+  };
+
+  const createLineEffect = (data, fromX, fromY, toX, toY, color) => {
+    data.effects.push({
+      type: 'line',
+      frame: 0,
+      maxFrame: 10,
+      fromX,
+      fromY,
+      toX,
+      toY,
+      color
+    });
+  };
+
+  const fireEnemyProjectile = (data, enemy, options) => {
+    const { player } = data;
+    const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+    const speed = options.speed || 3;
+    data.enemyBullets.push({
+      x: enemy.x,
+      y: enemy.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      damage: options.damage || 6,
+      radius: options.radius || 4,
+      slowFrames: options.slowFrames || 0,
+      explosionRadius: options.explosionRadius || 0,
+      color: options.color || '#ff8800'
+    });
+  };
+
+  const updateEnemyAttacks = (data) => {
+    const { enemies, player } = data;
+    enemies.forEach(enemy => {
+      if (enemy.evolutionStage === 0) return;
+      if (enemy.attackCooldown > 0) {
+        enemy.attackCooldown--;
+        return;
+      }
+
+      const dx = player.x - enemy.x;
+      const dy = player.y - enemy.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      switch (enemy.family) {
+        case 1: {
+          if (enemy.evolutionStage === 1) {
+            for (let i = -1; i <= 1; i++) {
+              fireEnemyProjectile(data, enemy, { speed: 3.2, damage: 6, color: '#ff4444' });
+            }
+            enemy.attackCooldown = 90;
+          } else if (enemy.evolutionStage === 2) {
+            damagePlayer(data, 12);
+            createLineEffect(data, enemy.x, enemy.y, player.x, player.y, 'rgba(255, 100, 100, 0.9)');
+            enemy.attackCooldown = 120;
+          } else {
+            const radius = 50;
+            data.effects.push({ x: player.x, y: player.y, radius, frame: 0, maxFrame: 20, type: 'explosion' });
+            if (dist < radius) {
+              damagePlayer(data, 14);
+            }
+            enemy.attackCooldown = 150;
+          }
+          break;
+        }
+        case 2: {
+          fireEnemyProjectile(data, enemy, { speed: 3.5, damage: 7, slowFrames: 60, color: '#44ccff' });
+          if (enemy.evolutionStage === 3) {
+            fireEnemyProjectile(data, enemy, { speed: 2.5, damage: 10, explosionRadius: 30, color: '#ff5522' });
+          }
+          enemy.attackCooldown = enemy.evolutionStage >= 2 ? 70 : 90;
+          break;
+        }
+        case 3: {
+          if (dist < 80) {
+            damagePlayer(data, 10 + enemy.evolutionStage * 2);
+            createLineEffect(data, enemy.x, enemy.y, player.x, player.y, 'rgba(180, 120, 255, 0.8)');
+            if (enemy.evolutionStage === 3 && data.frame % 120 === 0) {
+              const angle = Math.random() * Math.PI * 2;
+              enemy.x = player.x + Math.cos(angle) * 120;
+              enemy.y = player.y + Math.sin(angle) * 120;
+            }
+            enemy.attackCooldown = 60;
+          } else {
+            enemy.attackCooldown = 30;
+          }
+          break;
+        }
+        case 4: {
+          if (enemy.evolutionStage >= 2) {
+            fireEnemyProjectile(data, enemy, { speed: 2.8, damage: 9, slowFrames: 80, color: '#ccccff' });
+            enemy.attackCooldown = 90;
+          } else {
+            enemy.attackCooldown = 60;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    });
+  };
+
+  const updateEnemyBullets = (data) => {
+    const { enemyBullets, player } = data;
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+      const bullet = enemyBullets[i];
+      bullet.x += bullet.vx;
+      bullet.y += bullet.vy;
+
+      if (bullet.x < -20 || bullet.x > 820 || bullet.y < -20 || bullet.y > 620) {
+        enemyBullets.splice(i, 1);
+        continue;
+      }
+
+      const dist = Math.sqrt((player.x - bullet.x) ** 2 + (player.y - bullet.y) ** 2);
+      if (dist < 14 + bullet.radius) {
+        damagePlayer(data, bullet.damage);
+        if (bullet.slowFrames > 0) {
+          applySlow(data, bullet.slowFrames);
+        }
+        if (bullet.explosionRadius > 0) {
+          createExplosion(data, bullet.x, bullet.y, bullet.explosionRadius, bullet.damage * 0.5);
+        }
+        enemyBullets.splice(i, 1);
+      }
+    }
   };
 
   const updateBullets = (data) => {
@@ -396,6 +569,8 @@ const ShelterBreak = () => {
     updatePlayer(data);
     updateEnemies(data);
     updateBullets(data);
+    updateEnemyAttacks(data);
+    updateEnemyBullets(data);
     
     // Spawn enemies
     data.enemySpawnFrame++;
@@ -490,6 +665,14 @@ const ShelterBreak = () => {
       ctx.arc(bullet.x, bullet.y, 4, 0, Math.PI * 2);
       ctx.fill();
     });
+
+    // Enemy bullets
+    data.enemyBullets.forEach(bullet => {
+      ctx.fillStyle = bullet.color || '#ff8800';
+      ctx.beginPath();
+      ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
     
     // Effects
     data.effects.forEach(effect => {
@@ -500,6 +683,14 @@ const ShelterBreak = () => {
         ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (effect.type === 'line') {
+        const progress = effect.frame / effect.maxFrame;
+        ctx.strokeStyle = effect.color || `rgba(255, 255, 255, ${1 - progress})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(effect.fromX, effect.fromY);
+        ctx.lineTo(effect.toX, effect.toY);
         ctx.stroke();
       }
     });
@@ -540,9 +731,11 @@ const ShelterBreak = () => {
       images[key] = img;
     };
     loadImage('player', IMAGE_PATHS.player);
-    Object.values(IMAGE_PATHS.enemies).forEach(files => {
-      files.forEach(file => loadImage(`enemy:${file}`, `./pic/${file}`));
+    const enemyFiles = new Set();
+    Object.values(ENEMY_SPRITES).forEach(stageMap => {
+      Object.values(stageMap).forEach(files => files.forEach(file => enemyFiles.add(file)));
     });
+    enemyFiles.forEach(file => loadImage(`enemy:${file}`, `./pic/${file}`));
     data.images = images;
   }, []);
 
