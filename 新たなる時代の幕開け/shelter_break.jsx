@@ -12,6 +12,16 @@ const Award = (props) => <Icon label="🏆" {...props} />;
 const RotateCcw = (props) => <Icon label="🔄" {...props} />;
 const Play = (props) => <Icon label="▶️" {...props} />;
 
+const IMAGE_PATHS = {
+  player: './pic/protagonist_F.jpg',
+  enemies: {
+    small: ['enemy_1_1.jpg', 'enemy_1_2.jpg', 'enemy_1_3.jpg', 'enemy_1_4.jpg'],
+    heavy: ['enemy_2_1.jpg', 'enemy_2_2.jpg', 'enemy_2_3.jpg', 'enemy_2_4.jpg'],
+    fast: ['enemy_3_1.jpg', 'enemy_3_2.jpg', 'enemy_3_3.jpg'],
+    boss: ['enemy_4_1.jpg', 'enemy_4_2.jpg', 'enemy_4_3.jpg']
+  }
+};
+
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('title'); // title, playing, upgrade, gameover, victory
@@ -41,6 +51,7 @@ const ShelterBreak = () => {
     enemies: [],
     bullets: [],
     effects: [],
+    images: {},
     keys: {},
     frame: 0,
     enemySpawnFrame: 0,
@@ -121,9 +132,22 @@ const ShelterBreak = () => {
       color = '#ff44ff';
       size = 24;
     }
-    
+    const spriteList = IMAGE_PATHS.enemies[enemyType] || [];
+    const spriteFile = spriteList.length
+      ? spriteList[Math.floor(Math.random() * spriteList.length)]
+      : null;
+
     data.enemies.push({
-      x, y, hp, maxHP: hp, speed, color, size, enemyType, targetPlayer
+      x,
+      y,
+      hp,
+      maxHP: hp,
+      speed,
+      color,
+      size,
+      enemyType,
+      targetPlayer,
+      spriteKey: spriteFile ? `enemy:${spriteFile}` : null
     });
   };
 
@@ -436,10 +460,21 @@ const ShelterBreak = () => {
     
     // Enemies
     data.enemies.forEach(enemy => {
-      ctx.fillStyle = enemy.color;
-      ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
-      ctx.fill();
+      const sprite = enemy.spriteKey ? data.images[enemy.spriteKey] : null;
+      if (sprite && sprite.complete) {
+        ctx.drawImage(
+          sprite,
+          enemy.x - enemy.size,
+          enemy.y - enemy.size,
+          enemy.size * 2,
+          enemy.size * 2
+        );
+      } else {
+        ctx.fillStyle = enemy.color;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
       
       // HP bar
       ctx.fillStyle = '#ff0000';
@@ -470,13 +505,24 @@ const ShelterBreak = () => {
     });
     
     // Player
-    ctx.fillStyle = '#ff0055';
-    ctx.beginPath();
-    ctx.arc(data.player.x, data.player.y, 16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    const playerSprite = data.images.player;
+    if (playerSprite && playerSprite.complete) {
+      ctx.drawImage(
+        playerSprite,
+        data.player.x - 16,
+        data.player.y - 16,
+        32,
+        32
+      );
+    } else {
+      ctx.fillStyle = '#ff0055';
+      ctx.beginPath();
+      ctx.arc(data.player.x, data.player.y, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
     
     // Player HP bar
     ctx.fillStyle = '#ff0000';
@@ -484,6 +530,21 @@ const ShelterBreak = () => {
     ctx.fillStyle = '#00ff00';
     ctx.fillRect(data.player.x - 20, data.player.y - 30, 40 * (data.player.hp / data.player.maxHP), 4);
   };
+
+  useEffect(() => {
+    const data = gameDataRef.current;
+    const images = {};
+    const loadImage = (key, src) => {
+      const img = new Image();
+      img.src = src;
+      images[key] = img;
+    };
+    loadImage('player', IMAGE_PATHS.player);
+    Object.values(IMAGE_PATHS.enemies).forEach(files => {
+      files.forEach(file => loadImage(`enemy:${file}`, `./pic/${file}`));
+    });
+    data.images = images;
+  }, []);
 
   useEffect(() => {
     if (gameState === 'playing') {
