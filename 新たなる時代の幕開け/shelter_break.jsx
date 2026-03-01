@@ -43,7 +43,7 @@ const ShelterBreak = () => {
       speed: 3,
       attackRange: 120,
       attackDamage: 40,
-      attackSpeed: 50, // frames
+      attackSpeed: 40, // frames
       attackType: 'normal',
       piercing: 0,
       explosionRadius: 0,
@@ -79,7 +79,7 @@ const ShelterBreak = () => {
       speed: 3,
       attackRange: 120,
       attackDamage: 40,
-      attackSpeed: 50,
+      attackSpeed: 40,
       attackType: 'normal',
       piercing: 0,
       explosionRadius: 0,
@@ -169,6 +169,9 @@ const ShelterBreak = () => {
       speed = 0.9;
       color = '#ff44ff';
       size = 40;
+    }
+    if (family === 3 && evolutionStage === 1) {
+      hp *= 0.8;
     }
     if (wave <= 2) {
       hp = 20;
@@ -592,7 +595,10 @@ const ShelterBreak = () => {
     
     // Spawn enemies
     data.enemySpawnFrame++;
-    const spawnRate = Math.max(25, data.enemySpawnRate - data.currentWave * 6);
+    let spawnRate = Math.max(25, data.enemySpawnRate - data.currentWave * 6);
+    if (data.currentWave <= 3) {
+      spawnRate = Math.max(15, spawnRate - 10);
+    }
     if (data.enemySpawnFrame >= spawnRate) {
       spawnEnemy(data.currentWave);
       data.enemySpawnFrame = 0;
