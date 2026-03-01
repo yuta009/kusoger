@@ -58,10 +58,10 @@ const ShelterBreak = () => {
     keys: {},
     frame: 0,
     enemySpawnFrame: 0,
-    enemySpawnRate: 120,
+    enemySpawnRate: 90,
     killsThisWave: 0,
     totalKills: 0,
-    waveKillTarget: 20,
+    waveKillTarget: 12,
     currentWave: 1,
     specialAttackCooldown: 0
   });
@@ -94,7 +94,7 @@ const ShelterBreak = () => {
     data.killsThisWave = 0;
     data.totalKills = 0;
     data.currentWave = 1;
-    data.waveKillTarget = 20;
+    data.waveKillTarget = 12;
     
     setGameState('playing');
     setWave(1);
@@ -135,27 +135,27 @@ const ShelterBreak = () => {
     let hp = 20 * (1 + wave * 0.2);
     let speed = 1 + Math.random() * 0.5;
     let color = '#ff4444';
-    let size = 12;
-    let targetPlayer = false;
+    let size = 18;
+    // Enemies always move toward shelter; player is attacked via ranged/melee only
     
-    if (wave > 2 && Math.random() < 0.2) {
+    if (Math.random() < 0.2) {
       enemyType = 'heavy';
       hp = 80 * (1 + wave * 0.3);
-      speed = 0.5;
+      speed = 0.6;
       color = '#444444';
-      size = 16;
-    } else if (wave > 4 && Math.random() < 0.15) {
+      size = 22;
+    } else if (Math.random() < 0.15) {
       enemyType = 'fast';
       hp = 40 * (1 + wave * 0.2);
       speed = 2 + Math.random();
       color = '#44ff44';
-      size = 10;
-    } else if (wave > 6 && Math.random() < 0.1) {
+      size = 16;
+    } else if (wave > 3 && Math.random() < 0.08) {
       enemyType = 'boss';
       hp = 500 * (1 + wave * 0.5);
-      speed = 0.8;
+      speed = 0.9;
       color = '#ff44ff';
-      size = 24;
+      size = 32;
     }
     const family = getEnemyFamilyFromType(enemyType);
     const evolutionStage = getEvolutionStage(wave);
@@ -173,7 +173,6 @@ const ShelterBreak = () => {
       color,
       size,
       enemyType,
-      targetPlayer,
       spriteKey: spriteFile ? `enemy:${spriteFile}` : null,
       family,
       evolutionStage,
@@ -470,7 +469,7 @@ const ShelterBreak = () => {
             if (data.killsThisWave >= data.waveKillTarget) {
               data.currentWave++;
               data.killsThisWave = 0;
-              data.waveKillTarget = Math.floor(data.waveKillTarget * 1.3);
+              data.waveKillTarget = Math.floor(data.waveKillTarget * 1.2);
               setWave(data.currentWave);
               
               if (data.currentWave > 10) {
@@ -574,7 +573,7 @@ const ShelterBreak = () => {
     
     // Spawn enemies
     data.enemySpawnFrame++;
-    const spawnRate = Math.max(30, data.enemySpawnRate - data.currentWave * 5);
+    const spawnRate = Math.max(20, data.enemySpawnRate - data.currentWave * 8);
     if (data.enemySpawnFrame >= spawnRate) {
       spawnEnemy(data.currentWave);
       data.enemySpawnFrame = 0;
