@@ -1,5 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Shield, Zap, Target, Award, RotateCcw, Play } from 'lucide-react';
+const { useState, useEffect, useRef, useCallback } = React;
+
+const Icon = ({ label, className, size = 20 }) => (
+  <span className={className} style={{ fontSize: `${size}px` }} aria-hidden="true">
+    {label}
+  </span>
+);
+const Shield = (props) => <Icon label="🛡️" {...props} />;
+const Zap = (props) => <Icon label="⚡" {...props} />;
+const Target = (props) => <Icon label="🎯" {...props} />;
+const Award = (props) => <Icon label="🏆" {...props} />;
+const RotateCcw = (props) => <Icon label="🔄" {...props} />;
+const Play = (props) => <Icon label="▶️" {...props} />;
 
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
@@ -665,4 +676,5 @@ const ShelterBreak = () => {
   );
 };
 
-export default ShelterBreak;
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<ShelterBreak />);
