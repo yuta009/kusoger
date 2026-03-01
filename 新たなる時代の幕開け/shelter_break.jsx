@@ -43,7 +43,7 @@ const ShelterBreak = () => {
       speed: 3,
       attackRange: 120,
       attackDamage: 40,
-      attackSpeed: 60, // frames
+      attackSpeed: 50, // frames
       attackType: 'normal',
       piercing: 0,
       explosionRadius: 0,
@@ -61,7 +61,7 @@ const ShelterBreak = () => {
     frame: 0,
     enemySpawnFrame: 0,
     spawnIndex: 0,
-    enemySpawnRate: 80,
+    enemySpawnRate: 110,
     killsThisWave: 0,
     totalKills: 0,
     waveKillTarget: 18,
@@ -79,7 +79,7 @@ const ShelterBreak = () => {
       speed: 3,
       attackRange: 120,
       attackDamage: 40,
-      attackSpeed: 60,
+      attackSpeed: 50,
       attackType: 'normal',
       piercing: 0,
       explosionRadius: 0,
@@ -108,9 +108,9 @@ const ShelterBreak = () => {
   };
 
   const getEvolutionStage = (wave) => {
-    if (wave <= 2) return 0;
-    if (wave <= 4) return 1;
-    if (wave <= 7) return 2;
+    if (wave <= 3) return 0;
+    if (wave <= 6) return 1;
+    if (wave <= 9) return 2;
     return 3;
   };
 
@@ -174,7 +174,10 @@ const ShelterBreak = () => {
       hp = 20;
     }
     const family = getEnemyFamilyFromType(enemyType);
-    const evolutionStage = getEvolutionStage(wave);
+    let evolutionStage = getEvolutionStage(wave);
+    if (wave >= 9 && Math.random() < 0.3) {
+      evolutionStage = 0;
+    }
     const spriteList = (ENEMY_SPRITES[family] && ENEMY_SPRITES[family][evolutionStage]) || [];
     const spriteFile = spriteList.length
       ? spriteList[Math.floor(Math.random() * spriteList.length)]
@@ -589,7 +592,7 @@ const ShelterBreak = () => {
     
     // Spawn enemies
     data.enemySpawnFrame++;
-    const spawnRate = Math.max(20, data.enemySpawnRate - data.currentWave * 8);
+    const spawnRate = Math.max(25, data.enemySpawnRate - data.currentWave * 6);
     if (data.enemySpawnFrame >= spawnRate) {
       spawnEnemy(data.currentWave);
       data.enemySpawnFrame = 0;
