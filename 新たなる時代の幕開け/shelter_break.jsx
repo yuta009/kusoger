@@ -24,6 +24,7 @@ const ENEMY_SPRITES = {
 };
 
 const UPGRADE_KILL_INTERVAL = 18;
+const GAME_VERSION = '0.1.1';
 
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
@@ -40,7 +41,7 @@ const ShelterBreak = () => {
       y: 300,
       hp: 100,
       maxHP: 100,
-      speed: 3,
+      speed: 3.5,
       attackRange: 120,
       attackDamage: 40,
       attackSpeed: 40, // frames
@@ -76,7 +77,7 @@ const ShelterBreak = () => {
       y: 300,
       hp: 100,
       maxHP: 100,
-      speed: 3,
+      speed: 3.5,
       attackRange: 120,
       attackDamage: 40,
       attackSpeed: 40,
@@ -599,6 +600,9 @@ const ShelterBreak = () => {
     if (data.currentWave <= 3) {
       spawnRate = Math.max(15, spawnRate - 10);
     }
+    if (data.currentWave <= 2) {
+      spawnRate = Math.max(12, spawnRate - 6);
+    }
     if (data.enemySpawnFrame >= spawnRate) {
       spawnEnemy(data.currentWave);
       data.enemySpawnFrame = 0;
@@ -766,6 +770,7 @@ const ShelterBreak = () => {
     data.images = images;
   }, []);
 
+
   useEffect(() => {
     if (gameState === 'playing') {
       const interval = setInterval(gameLoop, 1000 / 60);
@@ -833,7 +838,7 @@ const ShelterBreak = () => {
           </div>
         </div>
         <div className="absolute bottom-3 right-3 text-xs text-white/70 bg-black/60 px-2 py-1 rounded">
-          Version: 0.1.0
+          Version: {GAME_VERSION}
         </div>
       </div>
     );
