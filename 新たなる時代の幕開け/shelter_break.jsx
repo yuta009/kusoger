@@ -499,9 +499,6 @@ const ShelterBreak = () => {
             setKillCount(data.totalKills);
             setScore(s => s + 100);
             addPlayerExp(data, enemy.evolutionStage);
-            if (data.totalKills % PLAYER_LEVEL_KILL_INTERVAL === 0) {
-              setPlayerLevel(level => level + 1);
-            }
             
             // Check for upgrade
             if (data.totalKills % UPGRADE_KILL_INTERVAL === 0) {
