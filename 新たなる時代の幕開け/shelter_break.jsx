@@ -24,11 +24,11 @@ const ENEMY_SPRITES = {
 };
 
 const UPGRADE_KILL_INTERVAL = 18;
-const PLAYER_EXP_PER_EVOLUTION = [3, 6, 10, 14];
-const PLAYER_EXP_TO_NEXT_BASE = 25;
-const PLAYER_EXP_GROWTH_RATE = 1.3;
-const PLAYER_EXP_GROWTH_FLAT = 2;
-const GAME_VERSION = '0.1.3';
+const PLAYER_EXP_PER_EVOLUTION = [5, 9, 14, 20];
+const PLAYER_EXP_TO_NEXT_BASE = 18;
+const PLAYER_EXP_GROWTH_RATE = 1.2;
+const PLAYER_EXP_GROWTH_FLAT = 1;
+const GAME_VERSION = '0.1.4';
 
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
@@ -169,6 +169,12 @@ const ShelterBreak = () => {
       enemyType = 'boss';
     }
 
+    const family = getEnemyFamilyFromType(enemyType);
+    let evolutionStage = getEvolutionStage(wave);
+    if (wave >= 9 && Math.random() < 0.3) {
+      evolutionStage = 0;
+    }
+
     if (enemyType === 'heavy') {
       hp = 80 * (1 + wave * 0.3);
       speed = 0.6;
@@ -191,13 +197,11 @@ const ShelterBreak = () => {
     if (family === 4 && evolutionStage === 1) {
       hp *= 0.7;
     }
+    if (family === 4) {
+      hp *= 0.25;
+    }
     if (wave <= 2) {
       hp = 20;
-    }
-    const family = getEnemyFamilyFromType(enemyType);
-    let evolutionStage = getEvolutionStage(wave);
-    if (wave >= 9 && Math.random() < 0.3) {
-      evolutionStage = 0;
     }
     const spriteList = (ENEMY_SPRITES[family] && ENEMY_SPRITES[family][evolutionStage]) || [];
     const spriteFile = spriteList.length
