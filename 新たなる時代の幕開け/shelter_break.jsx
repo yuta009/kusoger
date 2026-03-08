@@ -28,7 +28,7 @@ const PLAYER_EXP_PER_EVOLUTION = [3, 6, 10, 14];
 const PLAYER_EXP_TO_NEXT_BASE = 25;
 const PLAYER_EXP_GROWTH_RATE = 1.3;
 const PLAYER_EXP_GROWTH_FLAT = 2;
-const GAME_VERSION = '0.1.2';
+const GAME_VERSION = '0.1.3';
 
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
