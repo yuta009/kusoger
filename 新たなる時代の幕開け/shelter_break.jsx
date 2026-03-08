@@ -177,7 +177,9 @@ const ShelterBreak = () => {
 
     const family = getEnemyFamilyFromType(enemyType);
     let evolutionStage = getEvolutionStage(wave);
-    if (wave >= 9 && Math.random() < 0.3) {
+    if (wave >= 9) {
+      evolutionStage = 1;
+    } else if (wave >= 9 && Math.random() < 0.3) {
       evolutionStage = 0;
     }
 
@@ -229,6 +231,7 @@ const ShelterBreak = () => {
       spriteKey: spriteFile ? `enemy:${spriteFile}` : null,
       family,
       evolutionStage,
+      noExp: wave >= 9 && evolutionStage === 1,
       attackCooldown: 0
     });
   };
@@ -521,7 +524,7 @@ const ShelterBreak = () => {
             data.totalKills++;
             setKillCount(data.totalKills);
             setScore(s => s + 100);
-            addPlayerExp(data, enemy.evolutionStage);
+            addPlayerExp(data, enemy);
             
             // Check for upgrade
             if (data.totalKills % UPGRADE_KILL_INTERVAL === 0) {
@@ -562,9 +565,10 @@ const ShelterBreak = () => {
     }
   };
 
-  const addPlayerExp = (data, evolutionStage) => {
+  const addPlayerExp = (data, enemy) => {
+    if (enemy.noExp) return;
     const expGain =
-      PLAYER_EXP_PER_EVOLUTION[Math.min(evolutionStage, PLAYER_EXP_PER_EVOLUTION.length - 1)];
+      PLAYER_EXP_PER_EVOLUTION[Math.min(enemy.evolutionStage, PLAYER_EXP_PER_EVOLUTION.length - 1)];
     data.playerExp += expGain;
     while (data.playerExp >= data.expToNext) {
       data.playerExp -= data.expToNext;
@@ -667,7 +671,7 @@ const ShelterBreak = () => {
       spawnRate = Math.max(12, spawnRate - 6);
     }
     if (data.enemySpawnFrame >= spawnRate) {
-      const spawnCount = 2;
+      const spawnCount = data.currentWave >= 9 ? 5 : 2;
       for (let i = 0; i < spawnCount; i++) {
         spawnEnemy(data.currentWave);
       }
