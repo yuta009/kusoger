@@ -28,7 +28,7 @@ const PLAYER_EXP_PER_EVOLUTION = [5, 9, 14, 20];
 const PLAYER_EXP_TO_NEXT_BASE = 18;
 const PLAYER_EXP_GROWTH_RATE = 1.2;
 const PLAYER_EXP_GROWTH_FLAT = 1;
-const GAME_VERSION = '0.1.5';
+const GAME_VERSION = '0.1.6';
 
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
@@ -422,14 +422,24 @@ const ShelterBreak = () => {
           break;
         }
         case 3: {
-          if (dist < 80) {
+          if (enemy.evolutionStage === 3) {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 220;
+            enemy.x = player.x + Math.cos(angle) * distance;
+            enemy.y = player.y + Math.sin(angle) * distance;
+
+            const range = 220;
+            const tdx = player.x - enemy.x;
+            const tdy = player.y - enemy.y;
+            const tdist = Math.sqrt(tdx * tdx + tdy * tdy);
+            if (tdist <= range) {
+              damagePlayer(data, 16);
+              createLineEffect(data, enemy.x, enemy.y, player.x, player.y, 'rgba(180, 120, 255, 0.8)');
+            }
+            enemy.attackCooldown = 80;
+          } else if (dist < 80) {
             damagePlayer(data, 10 + enemy.evolutionStage * 2);
             createLineEffect(data, enemy.x, enemy.y, player.x, player.y, 'rgba(180, 120, 255, 0.8)');
-            if (enemy.evolutionStage === 3 && data.frame % 120 === 0) {
-              const angle = Math.random() * Math.PI * 2;
-              enemy.x = player.x + Math.cos(angle) * 120;
-              enemy.y = player.y + Math.sin(angle) * 120;
-            }
             enemy.attackCooldown = 60;
           } else {
             enemy.attackCooldown = 30;
@@ -967,6 +977,25 @@ const ShelterBreak = () => {
             <h3 className="text-2xl font-bold text-red-200">敵（共通）</h3>
             <p>基本的に避難所へ向かい、接触中は避難所HPが減少。</p>
             <p>小型（進化0）は主人公への攻撃なし。</p>
+
+            <div className="grid grid-cols-4 gap-3 pt-2">
+              <div className="text-center space-y-1">
+                <img src="./pic/enemy_1_1.jpg" alt="enemy_1" className="w-16 h-16 mx-auto rounded border border-red-400/40" />
+                <div className="text-xs text-red-200">enemy_1</div>
+              </div>
+              <div className="text-center space-y-1">
+                <img src="./pic/enemy_2_1.jpg" alt="enemy_2" className="w-16 h-16 mx-auto rounded border border-red-400/40" />
+                <div className="text-xs text-red-200">enemy_2</div>
+              </div>
+              <div className="text-center space-y-1">
+                <img src="./pic/enemy_3_1.jpg" alt="enemy_3" className="w-16 h-16 mx-auto rounded border border-red-400/40" />
+                <div className="text-xs text-red-200">enemy_3</div>
+              </div>
+              <div className="text-center space-y-1">
+                <img src="./pic/enemy_4_1.jpg" alt="enemy_4" className="w-16 h-16 mx-auto rounded border border-red-400/40" />
+                <div className="text-xs text-red-200">enemy_4</div>
+              </div>
+            </div>
 
             <div className="space-y-2">
               <p className="font-bold text-red-300">enemy_1</p>
