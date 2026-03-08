@@ -28,11 +28,11 @@ const PLAYER_EXP_PER_EVOLUTION = [5, 9, 14, 20];
 const PLAYER_EXP_TO_NEXT_BASE = 18;
 const PLAYER_EXP_GROWTH_RATE = 1.2;
 const PLAYER_EXP_GROWTH_FLAT = 1;
-const GAME_VERSION = '0.1.4';
+const GAME_VERSION = '0.1.5';
 
 const ShelterBreak = () => {
   const canvasRef = useRef(null);
-  const [gameState, setGameState] = useState('title'); // title, playing, upgrade, gameover, victory
+  const [gameState, setGameState] = useState('title'); // title, info, playing, upgrade, gameover, victory
   const [wave, setWave] = useState(1);
   const [playerLevel, setPlayerLevel] = useState(1);
   const [playerExp, setPlayerExp] = useState(0);
@@ -41,6 +41,8 @@ const ShelterBreak = () => {
   const [killCount, setKillCount] = useState(0);
   const [score, setScore] = useState(0);
   const [upgradeOptions, setUpgradeOptions] = useState([]);
+  const [isMusicOn, setIsMusicOn] = useState(true);
+  const audioRef = useRef(null);
   
   const gameDataRef = useRef({
     player: {
@@ -120,6 +122,10 @@ const ShelterBreak = () => {
     setShelterHP(1000);
     setKillCount(0);
     setScore(0);
+  };
+
+  const toggleMusic = () => {
+    setIsMusicOn(on => !on);
   };
 
   const getEvolutionStage = (wave) => {
@@ -394,9 +400,9 @@ const ShelterBreak = () => {
             }
             enemy.attackCooldown = 90;
           } else if (enemy.evolutionStage === 2) {
-            damagePlayer(data, 12);
             createLineEffect(data, enemy.x, enemy.y, player.x, player.y, 'rgba(255, 100, 100, 0.9)');
-            enemy.attackCooldown = 120;
+            applySlow(data, 30);
+            enemy.attackCooldown = 200;
           } else {
             const radius = 50;
             data.effects.push({ x: player.x, y: player.y, radius, frame: 0, maxFrame: 20, type: 'explosion' });
@@ -646,7 +652,13 @@ const ShelterBreak = () => {
       spawnRate = Math.max(12, spawnRate - 6);
     }
     if (data.enemySpawnFrame >= spawnRate) {
+      const evolutionStage = getEvolutionStage(data.currentWave);
+      const isEarlyEvolution1 = evolutionStage === 1 && data.killsThisWave < 4;
+      const isEarlyWave = data.currentWave <= 3;
       spawnEnemy(data.currentWave);
+      if (isEarlyEvolution1 || isEarlyWave) {
+        spawnEnemy(data.currentWave);
+      }
       data.enemySpawnFrame = 0;
     }
     
@@ -812,6 +824,27 @@ const ShelterBreak = () => {
     data.images = images;
   }, []);
 
+  useEffect(() => {
+    const audio = new Audio('./music/避難所の守護者_1.mp3');
+    audio.loop = true;
+    audio.volume = 0.4;
+    audioRef.current = audio;
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (gameState === 'playing' && isMusicOn) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  }, [gameState, isMusicOn]);
+
 
   useEffect(() => {
     if (gameState === 'playing') {
@@ -866,7 +899,7 @@ const ShelterBreak = () => {
             <p className="mt-4">都市の一角に設けられた小さな<span className="text-green-400 font-bold">避難所</span>。</p>
             <p>混乱する人々の中で、その前に立つのは、ただ一人の防衛者。</p>
             <p>頼れるのは、己の身体と、進化する戦闘能力のみ。</p>
-            <p className="text-center mt-6 text-xl text-yellow-300 font-bold">「ここは、俺が守る」</p>
+            <p className="text-center mt-6 text-xl text-yellow-300 font-bold">「ここは、私が守る」</p>
           </div>
 
           <button
@@ -877,6 +910,20 @@ const ShelterBreak = () => {
             スタート
           </button>
 
+          <button
+            onClick={() => setGameState('info')}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-3 rounded-lg text-xl font-bold hover:scale-105 transition-transform mx-auto shadow-xl"
+          >
+            情報を見る
+          </button>
+
+          <button
+            onClick={toggleMusic}
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-2 rounded-lg text-lg font-bold hover:scale-105 transition-transform mx-auto shadow-xl"
+          >
+            音楽: {isMusicOn ? 'ON' : 'OFF'}
+          </button>
+
           <div className="text-sm text-gray-400 mt-8">
             <p>操作: WASD / 矢印キー = 移動</p>
             <p>攻撃は自動 / 強化で戦闘力を上げろ！</p>
@@ -884,6 +931,66 @@ const ShelterBreak = () => {
         </div>
         <div className="absolute bottom-3 right-3 text-xs text-white/70 bg-black/60 px-2 py-1 rounded">
           Version: {GAME_VERSION}
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState === 'info') {
+    return (
+      <div className="w-full h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-black text-white relative overflow-hidden">
+        <div className="absolute top-3 right-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
+          Level: {playerLevel}
+        </div>
+        <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
+          <h2 className="text-4xl font-bold text-cyan-300 text-center">情報</h2>
+
+          <section className="bg-black/60 border border-cyan-500/40 rounded-lg p-6 space-y-3">
+            <h3 className="text-2xl font-bold text-cyan-200">主人公</h3>
+            <p>HP: 100 / 移動速度: 4.5 / 攻撃: 自動（最も近い敵）</p>
+            <p>攻撃速度: 40フレーム / 攻撃範囲: 120</p>
+            <p>レベル: 撃破で経験値獲得。必要EXPはレベルが上がるほど増加。</p>
+            <p>Waveアップ時にHPを20%回復。</p>
+          </section>
+
+          <section className="bg-black/60 border border-red-500/40 rounded-lg p-6 space-y-4">
+            <h3 className="text-2xl font-bold text-red-200">敵（共通）</h3>
+            <p>基本的に避難所へ向かい、接触中は避難所HPが減少。</p>
+            <p>小型（進化0）は主人公への攻撃なし。</p>
+
+            <div className="space-y-2">
+              <p className="font-bold text-red-300">enemy_1</p>
+              <p>進化1: 3連射 / 進化2: レーザー / 進化3: 範囲攻撃</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-bold text-red-300">enemy_2</p>
+              <p>電撃弾（当たるとスロー）/ 進化3で火球も追加</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-bold text-red-300">enemy_3</p>
+              <p>近距離鞭攻撃 / 進化3で瞬間移動</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-bold text-red-300">enemy_4</p>
+              <p>鈍器接触ダメージ / 進化2以降で遠距離（死神の手）</p>
+            </div>
+          </section>
+
+          <section className="bg-black/60 border border-yellow-500/40 rounded-lg p-6 space-y-3">
+            <h3 className="text-2xl font-bold text-yellow-200">操作</h3>
+            <p>WASD / 矢印キー: 移動</p>
+            <p>攻撃: 自動</p>
+            <p>音楽: タイトル画面でON/OFF</p>
+          </section>
+
+          <div className="text-center pt-2">
+            <button
+              onClick={() => setGameState('title')}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-3 rounded-lg text-lg font-bold hover:scale-105 transition-transform"
+            >
+              タイトルに戻る
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -1003,6 +1110,12 @@ const ShelterBreak = () => {
             <Award className="text-purple-400" />
             <span className="font-bold">Score: {score}</span>
           </div>
+          <button
+            onClick={toggleMusic}
+            className="bg-gray-700 px-3 py-1 rounded text-xs font-bold hover:bg-gray-600"
+          >
+            音楽 {isMusicOn ? 'ON' : 'OFF'}
+          </button>
         </div>
       </div>
 
