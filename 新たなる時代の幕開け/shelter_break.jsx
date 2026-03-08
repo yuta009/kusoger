@@ -24,10 +24,10 @@ const ENEMY_SPRITES = {
 };
 
 const UPGRADE_KILL_INTERVAL = 18;
-const PLAYER_EXP_PER_EVOLUTION = [5, 9, 14, 20];
-const PLAYER_EXP_TO_NEXT_BASE = 18;
-const PLAYER_EXP_GROWTH_RATE = 1.2;
-const PLAYER_EXP_GROWTH_FLAT = 1;
+const PLAYER_EXP_PER_EVOLUTION = [4, 7, 11, 16];
+const PLAYER_EXP_TO_NEXT_BASE = 24;
+const PLAYER_EXP_GROWTH_RATE = 1.3;
+const PLAYER_EXP_GROWTH_FLAT = 2;
 const GAME_VERSION = '0.1.6';
 
 const ShelterBreak = () => {
@@ -205,6 +205,9 @@ const ShelterBreak = () => {
     }
     if (family === 4) {
       hp *= 0.25;
+    }
+    if (evolutionStage === 3) {
+      hp *= 2;
     }
     if (wave <= 2) {
       hp = 20;
