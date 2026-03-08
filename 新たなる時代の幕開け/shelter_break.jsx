@@ -206,7 +206,7 @@ const ShelterBreak = () => {
     if (family === 4) {
       hp *= 0.25;
     }
-    if (evolutionStage === 3) {
+    if (evolutionStage >= 2) {
       hp *= 2;
     }
     if (wave <= 2) {
@@ -667,11 +667,8 @@ const ShelterBreak = () => {
       spawnRate = Math.max(12, spawnRate - 6);
     }
     if (data.enemySpawnFrame >= spawnRate) {
-      const evolutionStage = getEvolutionStage(data.currentWave);
-      const isEarlyEvolution1 = evolutionStage === 1 && data.killsThisWave < 4;
-      const isEarlyWave = data.currentWave <= 3;
-      spawnEnemy(data.currentWave);
-      if (isEarlyEvolution1 || isEarlyWave) {
+      const spawnCount = 2;
+      for (let i = 0; i < spawnCount; i++) {
         spawnEnemy(data.currentWave);
       }
       data.enemySpawnFrame = 0;
