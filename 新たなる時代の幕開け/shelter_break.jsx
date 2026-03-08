@@ -24,10 +24,11 @@ const ENEMY_SPRITES = {
 };
 
 const UPGRADE_KILL_INTERVAL = 18;
-const PLAYER_EXP_PER_EVOLUTION = [4, 7, 11, 16];
-const PLAYER_EXP_TO_NEXT_BASE = 24;
-const PLAYER_EXP_GROWTH_RATE = 1.3;
+const PLAYER_EXP_PER_EVOLUTION = [3, 6, 9, 14];
+const PLAYER_EXP_TO_NEXT_BASE = 28;
+const PLAYER_EXP_GROWTH_RATE = 1.35;
 const PLAYER_EXP_GROWTH_FLAT = 2;
+const LEVELS_PER_UPGRADE_BATCH = 5;
 const GAME_VERSION = '0.1.6';
 
 const ShelterBreak = () => {
@@ -35,6 +36,7 @@ const ShelterBreak = () => {
   const [gameState, setGameState] = useState('title'); // title, info, playing, upgrade, gameover, victory
   const [wave, setWave] = useState(1);
   const [playerLevel, setPlayerLevel] = useState(1);
+  const [pendingUpgrades, setPendingUpgrades] = useState(0);
   const [playerExp, setPlayerExp] = useState(0);
   const [expToNext, setExpToNext] = useState(PLAYER_EXP_TO_NEXT_BASE);
   const [shelterHP, setShelterHP] = useState(1000);
@@ -117,6 +119,7 @@ const ShelterBreak = () => {
     setGameState('playing');
     setWave(1);
     setPlayerLevel(1);
+    setPendingUpgrades(0);
     setPlayerExp(0);
     setExpToNext(PLAYER_EXP_TO_NEXT_BASE);
     setShelterHP(1000);
@@ -526,10 +529,13 @@ const ShelterBreak = () => {
             setScore(s => s + 100);
             addPlayerExp(data, enemy);
             
-            // Check for upgrade
+            // Check for upgrade (kill interval)
             if (data.totalKills % UPGRADE_KILL_INTERVAL === 0) {
-              generateUpgrades();
-              setGameState('upgrade');
+              setPendingUpgrades(count => count + 1);
+              if (gameState !== 'upgrade') {
+                generateUpgrades();
+                setGameState('upgrade');
+              }
             }
             
             // Check wave completion
@@ -574,8 +580,14 @@ const ShelterBreak = () => {
       data.playerExp -= data.expToNext;
       data.expToNext = Math.floor(data.expToNext * PLAYER_EXP_GROWTH_RATE) + PLAYER_EXP_GROWTH_FLAT;
       setPlayerLevel(level => level + 1);
-      generateUpgrades();
-      setGameState('upgrade');
+      setPendingUpgrades(count => {
+        const next = count + 1;
+        if (next >= LEVELS_PER_UPGRADE_BATCH && gameState !== 'upgrade') {
+          generateUpgrades();
+          setGameState('upgrade');
+        }
+        return next;
+      });
     }
     setPlayerExp(data.playerExp);
     setExpToNext(data.expToNext);
@@ -646,7 +658,15 @@ const ShelterBreak = () => {
         break;
     }
     
-    setGameState('playing');
+    setPendingUpgrades(count => {
+      const next = Math.max(0, count - 1);
+      if (next > 0) {
+        generateUpgrades();
+      } else {
+        setGameState('playing');
+      }
+      return next;
+    });
   };
 
   const gameLoop = useCallback(() => {
