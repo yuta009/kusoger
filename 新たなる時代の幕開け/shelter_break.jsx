@@ -557,6 +557,8 @@ const ShelterBreak = () => {
       data.playerExp -= data.expToNext;
       data.expToNext = Math.floor(data.expToNext * PLAYER_EXP_GROWTH_RATE) + PLAYER_EXP_GROWTH_FLAT;
       setPlayerLevel(level => level + 1);
+      generateUpgrades();
+      setGameState('upgrade');
     }
     setPlayerExp(data.playerExp);
     setExpToNext(data.expToNext);
