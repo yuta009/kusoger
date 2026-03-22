@@ -23,7 +23,6 @@ const ENEMY_SPRITES = {
   4: { 0: ['enemy_4_1.jpg'], 1: ['enemy_4_2.jpg'], 2: ['enemy_4_3.jpg'], 3: ['enemy_4_3.jpg'] }
 };
 
-const UPGRADE_KILL_INTERVAL = 18;
 const PLAYER_EXP_PER_EVOLUTION = [3, 6, 9, 14];
 const PLAYER_EXP_TO_NEXT_BASE = 28;
 const PLAYER_EXP_GROWTH_RATE = 1.35;
@@ -37,6 +36,7 @@ const ShelterBreak = () => {
   const [wave, setWave] = useState(1);
   const [playerLevel, setPlayerLevel] = useState(1);
   const [pendingUpgrades, setPendingUpgrades] = useState(0);
+  const [levelUpCounter, setLevelUpCounter] = useState(0);
   const [playerExp, setPlayerExp] = useState(0);
   const [expToNext, setExpToNext] = useState(PLAYER_EXP_TO_NEXT_BASE);
   const [shelterHP, setShelterHP] = useState(1000);
@@ -120,6 +120,7 @@ const ShelterBreak = () => {
     setWave(1);
     setPlayerLevel(1);
     setPendingUpgrades(0);
+    setLevelUpCounter(0);
     setPlayerExp(0);
     setExpToNext(PLAYER_EXP_TO_NEXT_BASE);
     setShelterHP(1000);
@@ -529,14 +530,7 @@ const ShelterBreak = () => {
             setScore(s => s + 100);
             addPlayerExp(data, enemy);
             
-            // Check for upgrade (kill interval)
-            if (data.totalKills % UPGRADE_KILL_INTERVAL === 0) {
-              setPendingUpgrades(count => count + 1);
-              if (gameState !== 'upgrade') {
-                generateUpgrades();
-                setGameState('upgrade');
-              }
-            }
+            // 強化はレベルアップのバッチでのみ発生
             
             // Check wave completion
             if (data.killsThisWave >= data.waveKillTarget) {
@@ -580,11 +574,15 @@ const ShelterBreak = () => {
       data.playerExp -= data.expToNext;
       data.expToNext = Math.floor(data.expToNext * PLAYER_EXP_GROWTH_RATE) + PLAYER_EXP_GROWTH_FLAT;
       setPlayerLevel(level => level + 1);
-      setPendingUpgrades(count => {
+      setLevelUpCounter(count => {
         const next = count + 1;
-        if (next >= LEVELS_PER_UPGRADE_BATCH && gameState !== 'upgrade') {
-          generateUpgrades();
-          setGameState('upgrade');
+        if (next >= LEVELS_PER_UPGRADE_BATCH) {
+          setPendingUpgrades(pending => pending + LEVELS_PER_UPGRADE_BATCH);
+          if (gameState !== 'upgrade') {
+            generateUpgrades();
+            setGameState('upgrade');
+          }
+          return 0;
         }
         return next;
       });
@@ -1192,7 +1190,7 @@ const ShelterBreak = () => {
 
       {/* Controls */}
       <div className="w-full bg-gray-900 p-4 text-white text-center">
-        <p className="text-sm">WASD / 矢印キー: 移動 | 攻撃: 自動 | 次の強化まで: {UPGRADE_KILL_INTERVAL - (killCount % UPGRADE_KILL_INTERVAL)}体</p>
+        <p className="text-sm">WASD / 矢印キー: 移動 | 攻撃: 自動 | 次の強化まで: {LEVELS_PER_UPGRADE_BATCH - levelUpCounter}レベル</p>
       </div>
     </div>
   );

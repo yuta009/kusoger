@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ギルド抗争：覚醒ブロック戦線</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700;900&display=swap');
+
+  :root {
+    --bg-deep: #03050f;
+    --bg-mid: #070d1f;
+    --bg-panel: rgba(10,18,40,0.92);
+    --guild-blue: #00c8ff;
+    --guild-blue-glow: rgba(0,200,255,0.4);
+    --guild-blue-dark: #004466;
+    --enemy-red: #ff2244;
+    --enemy-red-glow: rgba(255,34,68,0.4);
+    --enemy-red-dark: #660011;
+    --highlight: rgba(255,255,160,0.25);
+    --highlight-border: rgba(255,255,120,0.8);
+    --text-main: #c8dff8;
+    --text-dim: #5a7a9a;
+    --gold: #ffd700;
+    --win-line: #00ffaa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-main);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 0;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 30%, rgba(0,80,160,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 30% at 80% 70%, rgba(160,0,40,0.14) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* SCANLINES */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .screen {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+    padding: 16px;
+  }
+
+  /* ====== STREAK SKIN (lightweight) ====== */
+  body.streak-1 {
+    --guild-blue: #2fe9ff;
+    --guild-blue-glow: rgba(47,233,255,0.65);
+  }
+  body.streak-3 {
+    --guild-blue: #6dfffb;
+    --guild-blue-glow: rgba(109,255,251,0.9);
+  }
+  body.streak-boost {
+    --win-line: #55ffea;
+  }
+  body.streak-boost .cell.win-line {
+    animation: win-flash 0.2s infinite alternate;
+  }
+
+  /* ====== TITLE SCREEN ====== */
+  #title-screen {
+    text-align: center;
+    animation: fadeIn 0.6s ease;
+  }
+
+  .title-logo {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: clamp(20px, 4vw, 32px);
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--guild-blue), #ffffff, var(--enemy-red));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 12px rgba(0,180,255,0.5));
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .title-sub {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(10px, 2vw, 14px);
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    margin-bottom: 28px;
+  }
+
+  .story-box {
+    background: var(--bg-panel);
+    border: 1px solid rgba(0,200,255,0.2);
+    border-left: 3px solid var(--guild-blue);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #99bbdd;
+  }
+
+  .story-box p { margin-bottom: 4px; }
+  .story-box .em-blue { color: var(--guild-blue); font-weight: 700; }
+  .story-box .em-red { color: var(--enemy-red); font-weight: 700; }
+  .story-box .em-gold { color: var(--gold); font-weight: 700; }
+
+  /* ====== CPU LEVEL SELECT ====== */
+  .cpu-level-select {
+    background: var(--bg-panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+
+  .cpu-level-title {
+    font-family: 'Orbitron', monospace;
+    color: var(--guild-blue);
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .cpu-level-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .cpu-lv-btn {
+    padding: 10px 18px;
+    font-size: 12px;
+  }
+
+  .cpu-lv-btn.active {
+    background: rgba(0,200,255,0.16);
+    border-color: rgba(0,200,255,0.65);
+    box-shadow: 0 0 26px var(--guild-blue-glow);
+    color: #fff;
+  }
+
+  /* CPU human side select */
+  .cpu-human-select {
+    background: var(--bg-panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+
+  .cpu-human-title {
+    font-family: 'Orbitron', monospace;
+    color: var(--guild-blue);
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .cpu-human-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  /* ====== CPU vs CPU simulation ====== */
+  .sim-select {
+    background: var(--bg-panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+  .sim-title {
+    font-family: 'Orbitron', monospace;
+    color: var(--guild-blue);
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .sim-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .sim-input {
+    width: 140px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text-main);
+    font-family: 'Orbitron', monospace;
+  }
+  .sim-result {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    text-align: center;
+    min-height: 28px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 12px 28px;
+    border: none;
+    cursor: pointer;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-primary {
+    background: linear-gradient(90deg, #0044aa, var(--guild-blue));
+    color: #fff;
+    box-shadow: 0 0 20px var(--guild-blue-glow);
+  }
+  .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 32px var(--guild-blue-glow); }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-dim);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+
+  /* ====== RULE SCREEN ====== */
+  #rule-screen { animation: fadeIn 0.4s ease; }
+
+  .rule-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    color: var(--guild-blue);
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(0,200,255,0.3);
+    padding-bottom: 8px;
+  }
+
+  .rule-section {
+    background: var(--bg-panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #99bbdd;
+  }
+
+  .rule-section h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+  }
+
+  /* ====== GAME SCREEN ====== */
+  #game-screen { animation: fadeIn 0.3s ease; }
+
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 10px;
+  }
+
+  .turn-indicator {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 6px 14px;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    transition: all 0.3s;
+  }
+
+  .turn-player {
+    background: linear-gradient(90deg, var(--guild-blue-dark), rgba(0,100,150,0.6));
+    color: var(--guild-blue);
+    border: 1px solid var(--guild-blue);
+    box-shadow: 0 0 12px var(--guild-blue-glow);
+  }
+
+  .turn-enemy {
+    background: linear-gradient(90deg, var(--enemy-red-dark), rgba(100,0,20,0.6));
+    color: var(--enemy-red);
+    border: 1px solid var(--enemy-red);
+    box-shadow: 0 0 12px var(--enemy-red-glow);
+  }
+
+  .turn-count {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* GRID */
+  .grid-wrapper {
+    position: relative;
+    background: var(--bg-panel);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 10px;
+  }
+
+  #game-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 3px;
+    direction: ltr;
+  }
+
+  .cell {
+    aspect-ratio: 1;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+    cursor: not-allowed;
+    transition: all 0.15s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    border-radius: 2px;
+  }
+
+  .cell.placeable {
+    cursor: pointer;
+    border-color: var(--pulse-border-0, rgba(255,255,120,0.5));
+    background: var(--pulse-bg, rgba(255,255,120,0.08));
+    animation: pulse-cell 1.5s infinite;
+  }
+
+  .cell.placeable:hover {
+    transform: scale(1.05);
+    z-index: 2;
+  }
+
+  @keyframes pulse-cell {
+    0%, 100% { border-color: var(--pulse-border-0, rgba(255,255,120,0.3)); }
+    50% { border-color: var(--pulse-border-1, rgba(255,255,120,0.7)); }
+  }
+
+  /* 手番色に合わせた配置可能ハイライト */
+  .cell.placeable.placeable-blue {
+    --pulse-border-0: rgba(0,200,255,0.35);
+    --pulse-border-1: rgba(0,200,255,0.85);
+    --pulse-bg: rgba(0,200,255,0.10);
+  }
+  .cell.placeable.placeable-blue:hover {
+    background: rgba(0,200,255,0.22);
+  }
+
+  .cell.placeable.placeable-red {
+    --pulse-border-0: rgba(255,34,68,0.35);
+    --pulse-border-1: rgba(255,34,68,0.85);
+    --pulse-bg: rgba(255,34,68,0.10);
+  }
+  .cell.placeable.placeable-red:hover {
+    background: rgba(255,34,68,0.22);
+  }
+
+  .cell.blue {
+    background: linear-gradient(135deg, #003355, var(--guild-blue-dark));
+    border-color: var(--guild-blue);
+    box-shadow: 0 0 8px var(--guild-blue-glow), inset 0 1px 0 rgba(0,200,255,0.3);
+  }
+
+  .cell.blue::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-top: 1px solid rgba(0,200,255,0.4);
+    border-left: 1px solid rgba(0,200,255,0.2);
+  }
+
+  .cell.red {
+    background: linear-gradient(135deg, #330011, var(--enemy-red-dark));
+    border-color: var(--enemy-red);
+    box-shadow: 0 0 8px var(--enemy-red-glow), inset 0 1px 0 rgba(255,34,68,0.3);
+  }
+
+  .cell.red::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-top: 1px solid rgba(255,34,68,0.4);
+    border-left: 1px solid rgba(255,34,68,0.2);
+  }
+
+  .cell.win-line {
+    animation: win-flash 0.4s infinite alternate;
+    z-index: 3;
+  }
+
+  @keyframes win-flash {
+    from { box-shadow: 0 0 10px var(--win-line), inset 0 0 8px rgba(0,255,170,0.3); }
+    to { box-shadow: 0 0 25px var(--win-line), inset 0 0 15px rgba(0,255,170,0.5); border-color: var(--win-line); }
+  }
+
+  .col-labels {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 3px;
+    margin-top: 4px;
+    padding: 0 10px;
+  }
+
+  .col-label {
+    text-align: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+  }
+
+  /* STATUS BAR */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding: 8px 14px;
+    background: var(--bg-panel);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px;
+  }
+
+  .faction-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .faction-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .dot-blue { background: var(--guild-blue); box-shadow: 0 0 6px var(--guild-blue); }
+  .dot-red { background: var(--enemy-red); box-shadow: 0 0 6px var(--enemy-red); }
+
+  /* ====== RESULT SCREEN ====== */
+  #result-screen { text-align: center; animation: fadeIn 0.5s ease; }
+
+  .result-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(28px, 6vw, 48px);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    margin: 16px 0;
+  }
+
+  .result-win { color: var(--guild-blue); text-shadow: 0 0 30px var(--guild-blue-glow); }
+  .result-lose { color: var(--enemy-red); text-shadow: 0 0 30px var(--enemy-red-glow); }
+  .result-draw { color: var(--gold); text-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+  .result-desc {
+    font-size: 13px;
+    color: #88aacc;
+    margin-bottom: 24px;
+    line-height: 1.7;
+  }
+
+  .result-stats {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: 24px;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: rgba(20,30,60,0.95);
+    border: 1px solid rgba(255,200,0,0.4);
+    color: var(--gold);
+    padding: 8px 20px;
+    font-size: 12px;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 0.08em;
+    transition: transform 0.3s ease;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* AI THINKING */
+  .thinking-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(3,5,15,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    color: var(--enemy-red);
+    letter-spacing: 0.15em;
+    pointer-events: none;
+  }
+
+  .dot-loader span {
+    display: inline-block;
+    animation: dotBounce 0.6s infinite alternate;
+  }
+
+  .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes dotBounce {
+    from { opacity: 0.2; transform: translateY(0); }
+    to { opacity: 1; transform: translateY(-4px); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div id="title-screen" class="screen">
+  <div class="title-logo">ギルド抗争</div>
+  <div class="title-logo" style="font-size: clamp(14px,3vw,22px); margin-bottom:8px;">覚醒ブロック戦線</div>
+  <div class="title-sub">GUILD CONFLICT : AWAKENING BLOCK FRONT</div>
+
+  <div class="story-box">
+    <p>ガイザー災害後――異世界エネルギーにより人類は<span class="em-gold">「覚醒」</span>という新たな力を手に入れた。</p>
+    <p>しかしその力は希望だけでなく、<span class="em-red">狂気</span>も生み出した。</p>
+    <p>警察も政府も機能しない中、人々は自らを守るため<span class="em-blue">「ギルド」</span>を結成する。</p>
+    <p style="margin-top:8px;">プレイヤーはギルドのリーダーとなり、覚醒犯罪者たちとの知略戦――<span class="em-gold">ブロック戦闘</span>に挑む。</p>
+  </div>
+
+  <div class="cpu-level-select">
+    <div class="cpu-level-title">CPUの強さ（レベル）</div>
+    <div class="cpu-level-row">
+      <button class="btn btn-secondary cpu-lv-btn" id="cpu-lv-1" onclick="setCpuLevel(1)">CPU Lv.1</button>
+      <button class="btn btn-secondary cpu-lv-btn" id="cpu-lv-2" onclick="setCpuLevel(2)">CPU Lv.2</button>
+      <button class="btn btn-secondary cpu-lv-btn" id="cpu-lv-3" onclick="setCpuLevel(3)">CPU Lv.3</button>
+    </div>
+  </div>
+
+  <div class="cpu-human-select">
+    <div class="cpu-human-title">あなたが操作する側</div>
+    <div class="cpu-human-row">
+      <button class="btn btn-secondary cpu-lv-btn" id="cpu-human-blue" onclick="setCpuHumanColor('blue')">ギルド（青）</button>
+      <button class="btn btn-secondary cpu-lv-btn" id="cpu-human-red" onclick="setCpuHumanColor('red')">犯罪者（赤）</button>
+    </div>
+  </div>
+
+  <div class="sim-select">
+    <div class="sim-title">CPU vs CPU シミュレーション</div>
+    <div class="sim-row">
+      <input class="sim-input" type="number" id="sim-games" min="10" max="5000" step="10" value="200">
+      <button class="btn btn-primary" onclick="runCpuCpuSimulation()" id="sim-btn">実行</button>
+    </div>
+    <div class="sim-result" id="sim-result"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startGameCpu()">▶ CPU戦</button>
+    <button class="btn btn-secondary" onclick="startGamePvp()">▶ 対人戦</button>
+    <button class="btn btn-secondary" onclick="showRules()">？ ルール説明</button>
+  </div>
+</div>
+
+<!-- RULE SCREEN -->
+<div id="rule-screen" class="screen hidden">
+  <div class="rule-title">RULE / 戦闘規定</div>
+
+  <div class="rule-section">
+    <h3>◆ 盤面</h3>
+    10列 × 10段のグリッド。ブロックは下から積み上がる。
+  </div>
+
+  <div class="rule-section">
+    <h3>◆ 勝利条件（防衛/攻撃の目標）</h3>
+    <strong style="color:#aaccff">① 防衛成功：ギルド（青）のライン勝ち</strong>：青ブロックが直線上に連続5個並ぶ。<br>
+    　縦・横・斜め（斜め2方向）が対象。<span style="color:var(--text-dim)">※立体斜めは不可。</span><br><br>
+    <strong style="color:var(--enemy-red)">② 陥落達成：犯罪者（赤）の高さ勝ち</strong>：赤ブロックが<strong style="color:var(--gold)">10段目（最上段）</strong>に到達し、3個以上そろう。
+  </div>
+
+  <div class="rule-section">
+    <h3>◆ 配置ルール</h3>
+    ・初手：最下段（1段目）のみ配置可能。<br>
+    ・2手目以降：<br>
+    　① 真下にブロックがある（積み上げ）<br>
+    　② 同一段に隣接するブロックがある（横広がり）<br>
+    　の いずれかを満たす空きマスに配置可能。
+  </div>
+
+  <div class="rule-section">
+    <h3>◆ 膠着（防衛勝利）</h3>
+    合法手がない（勝利条件未達）の場合、ギルド（青）の防衛成功として扱う。
+  </div>
+
+  <div class="rule-section">
+    <h3>◆ 世界観メモ</h3>
+    青ブロック＝ギルドの<em>結界の石</em> ／ 赤ブロック＝<em>暴走覚醒の塊</em><br>
+    横ライン5＝<em>ギルドの結束で侵攻を止めろ</em> ／ 高さ10＝<em>暴走覚醒を天井まで押し上げろ（赤3個）</em>
+  </div>
+
+  <div class="btn-row" style="margin-top:16px;">
+    <button class="btn btn-primary" onclick="startGameCpu()">▶ CPU戦</button>
+    <button class="btn btn-secondary" onclick="startGamePvp()">▶ 対人戦</button>
+    <button class="btn btn-secondary" onclick="showTitle()">← 戻る</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen hidden">
+  <div class="game-header">
+    <div id="turn-indicator" class="turn-indicator turn-player">GUILD TURN</div>
+    <div id="turn-count" class="turn-count">TURN 1</div>
+  </div>
+
+  <div class="grid-wrapper">
+    <div id="game-grid"></div>
+    <div id="thinking" class="thinking-overlay hidden">
+      敵が思考中<span class="dot-loader"><span>.</span><span>.</span><span>.</span></span>
+    </div>
+  </div>
+
+  <div class="col-labels" id="col-labels"></div>
+
+  <div class="status-bar">
+    <div class="faction-stat">
+      <div class="faction-dot dot-blue"></div>
+      <span style="color:var(--guild-blue)">ギルド</span>
+      <span id="blue-count" style="color:var(--text-dim); font-family:'Orbitron',monospace;">0</span>
+    </div>
+    <div style="font-size:10px; color:var(--text-dim); font-family:'Orbitron',monospace;" id="game-hint">配置可能マスをタップ</div>
+    <div class="faction-stat">
+      <span id="red-count" style="color:var(--text-dim); font-family:'Orbitron',monospace;">0</span>
+      <span style="color:var(--enemy-red)">犯罪者</span>
+      <div class="faction-dot dot-red"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="result-screen" class="screen hidden">
+  <div id="result-badge" class="result-badge"></div>
+  <div id="result-flavor" class="result-desc"></div>
+  <div class="result-stats">
+    <div class="stat-item">
+      <span id="result-turns" class="stat-num">0</span>
+      <span class="stat-label">TURNS</span>
+    </div>
+    <div class="stat-item">
+      <span id="result-blue" class="stat-num">0</span>
+      <span class="stat-label">GUILD BLOCKS</span>
+    </div>
+    <div class="stat-item">
+      <span id="result-red" class="stat-num">0</span>
+      <span class="stat-label">ENEMY BLOCKS</span>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startGame()">↺ RETRY</button>
+    <button class="btn btn-secondary" onclick="showTitle()">⌂ TITLE</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ====== GAME STATE ======
+const COLS = 10, ROWS = 10;
+let board = []; // board[row][col] = null | 'blue' | 'red'  row 0 = bottom
+let turn = 'blue'; // 'blue' | 'red'
+let turnCount = 1;
+let gameOver = false;
+let winCells = [];
+// 対戦モード:
+// - 'cpu' : 青（ギルド）が人間、赤（犯罪者）がAI
+// - 'pvp' : 青/赤とも人間（交互に配置）
+let gameMode = 'cpu';
+
+// ====== CPU difficulty ======
+// 1: ランダム寄り, 2: 中間, 3: 強め（ほぼ最善）
+let cpuLevel = 2;
+
+function setCpuLevel(level) {
+  cpuLevel = level;
+  for (let lv = 1; lv <= 3; lv++) {
+    const btn = document.getElementById('cpu-lv-' + lv);
+    if (!btn) continue;
+    btn.classList.toggle('active', lv === cpuLevel);
+  }
+}
+
+// 初期表示反映
+setTimeout(() => {
+  setCpuLevel(cpuLevel);
+  setCpuHumanColor(cpuHumanColor);
+}, 0);
+
+// ====== CPU human side (you) ======
+// CPU戦でプレイヤーが操作する色：blue(ギルド) / red(犯罪者)
+let cpuHumanColor = 'blue';
+
+function setCpuHumanColor(color) {
+  cpuHumanColor = color;
+  const btnBlue = document.getElementById('cpu-human-blue');
+  const btnRed = document.getElementById('cpu-human-red');
+  if (btnBlue) btnBlue.classList.toggle('active', color === 'blue');
+  if (btnRed) btnRed.classList.toggle('active', color === 'red');
+}
+
+function isHumanTurnColor(color) {
+  if (gameMode === 'pvp') return true;
+  if (gameMode === 'cpu') return color === cpuHumanColor;
+  return color === 'blue';
+}
+
+// ====== CPU vs CPU simulation ======
+let simRunning = false;
+
+function simulateSingleCpuVsCpuGame() {
+  initBoard();
+  turn = 'blue';
+  turnCount = 1;
+  gameOver = false;
+  winCells = [];
+
+  const maxPlays = ROWS * COLS + 5;
+  let plays = 0;
+
+  while (true) {
+    plays++;
+    const moves = getLegalMoves();
+    if (!moves.length) {
+      // 合法手がない場合でも、先に勝利条件が成立していないかを再チェック
+      const rres = checkWin('red');
+      if (rres.win) return 'red';
+      const bres = checkWin('blue');
+      if (bres.win) return 'blue';
+      return 'blue'; // 膠着はギルド（青）勝利扱い
+    }
+
+    const color = turn; // 'blue' | 'red'
+    const mv = aiMove(color);
+    if (!mv) {
+      const rres = checkWin('red');
+      if (rres.win) return 'red';
+      const bres = checkWin('blue');
+      if (bres.win) return 'blue';
+      return 'blue';
+    }
+
+    place(mv[0], mv[1], color);
+
+    const res = checkWin(color);
+    if (res.win) return color;
+
+    turn = (color === 'blue') ? 'red' : 'blue';
+    turnCount++;
+
+    if (plays > maxPlays) return 'blue';
+  }
+}
+
+async function runCpuCpuSimulation() {
+  if (simRunning) return;
+  const input = document.getElementById('sim-games');
+  const resultEl = document.getElementById('sim-result');
+  const btn = document.getElementById('sim-btn');
+
+  let n = parseInt(input?.value || '200', 10);
+  if (!Number.isFinite(n) || n <= 0) n = 200;
+
+  simRunning = true;
+  if (btn) btn.disabled = true;
+  if (resultEl) resultEl.textContent = 'シミュレーション中...';
+
+  // 現在の盤面を復元するため退避
+  const prev = { board, turn, turnCount, gameOver, winCells };
+
+  let blueWins = 0;
+  let redWins = 0;
+  try {
+    for (let i = 0; i < n; i++) {
+      const w = simulateSingleCpuVsCpuGame();
+      if (w === 'blue') blueWins++;
+      else redWins++;
+
+      // 途中経過（重いので少なめ更新）
+      if (i % 50 === 49) {
+        if (resultEl) resultEl.textContent = `経過: ${i + 1}/${n} 対戦`;
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+
+    if (resultEl) {
+      resultEl.innerHTML = `
+        <div>結果（CPU Lv.${cpuLevel} 同士 / 先手: 青）</div>
+        <div>青（ギルド）勝ち: <strong>${blueWins}</strong> / ${n}</div>
+        <div>赤（犯罪者）勝ち: <strong>${redWins}</strong> / ${n}</div>
+      `;
+    }
+  } finally {
+    board = prev.board;
+    turn = prev.turn;
+    turnCount = prev.turnCount;
+    gameOver = prev.gameOver;
+    winCells = prev.winCells;
+
+    simRunning = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function startGameCpu() {
+  gameMode = 'cpu';
+  startGame();
+}
+
+function startGamePvp() {
+  gameMode = 'pvp';
+  startGame();
+}
+
+// ====== STREAK SKIN ======
+// 連勝スキン用に最小限の永続化だけ行う（ゲーム本編は保存しない）
+const STREAK_KEY = 'guild_block_win_streak_v1';
+
+function safeLoadStreak() {
+  try {
+    const v = parseInt(localStorage.getItem(STREAK_KEY) || '0', 10);
+    return Number.isFinite(v) ? v : 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function safeSaveStreak(v) {
+  try {
+    localStorage.setItem(STREAK_KEY, String(v));
+  } catch (_) {
+    // ストレージが使えない環境でもゲームは進める
+  }
+}
+
+function applyStreakSkin(streak) {
+  document.body.classList.remove('streak-1', 'streak-3', 'streak-boost');
+  if (streak >= 1) document.body.classList.add('streak-1');
+  if (streak >= 3) document.body.classList.add('streak-3');
+  if (streak >= 5) document.body.classList.add('streak-boost');
+}
+
+applyStreakSkin(safeLoadStreak());
+
+function initBoard() {
+  board = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+}
+
+// ====== LEGAL MOVES ======
+function isLegal(row, col) {
+  if (board[row][col] !== null) return false;
+
+  // Initial: row 0 (bottom)
+  if (row === 0) return true;
+  // Under support
+  if (board[row-1][col] !== null) return true;
+ 
+  // "下側"の違和感対策：
+  // 直上にブロックがある場合も、その空マスを合法として許可する。
+  if (row + 1 < ROWS && board[row + 1][col] !== null) return true;
+
+  // Horizontal adjacency same row
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+  for (const [dr, dc] of dirs) {
+    const nr = row + dr, nc = col + dc;
+    if (nr === row && nc >= 0 && nc < COLS && board[row][nc] !== null) return true;
+  }
+  return false;
+}
+
+function getLegalMoves() {
+  const moves = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (isLegal(r, c)) moves.push([r, c]);
+    }
+  }
+  return moves;
+}
+
+// ====== WIN CHECK ======
+function checkWin(color) {
+  // ギルド（青）= 防衛目標：ライン5
+  if (color === 'blue') {
+    const directions = [
+      [0, 1],   // horizontal
+      [1, 0],   // vertical
+      [1, 1],   // diagonal
+      [1, -1],  // anti-diagonal
+    ];
+
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (board[r][c] !== color) continue;
+        for (const [dr, dc] of directions) {
+          const cells = [[r, c]];
+          for (let k = 1; k < 5; k++) {
+            const nr = r + dr * k, nc = c + dc * k;
+            if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) break;
+            if (board[nr][nc] === color) cells.push([nr, nc]);
+            else break;
+          }
+          if (cells.length >= 5) return { win: true, cells: cells.slice(0, 5) };
+        }
+      }
+    }
+    return { win: false, cells: [] };
+  }
+
+  // 犯罪者（赤）= 攻撃目標：10段目（最上段）に赤が3個以上そろう
+  const topRow = ROWS - 1;
+  const cells = [];
+  for (let c = 0; c < COLS; c++) {
+    if (board[topRow][c] === 'red') cells.push([topRow, c]);
+  }
+  if (cells.length >= 3) return { win: true, cells: cells.slice(0, 3) };
+
+  return { win: false, cells: [] };
+}
+
+// ====== AI ======
+function scoreMove(r, c, color) {
+  const opp = color === 'red' ? 'blue' : 'red';
+  board[r][c] = color;
+  let score = 0;
+
+  // Check if this wins
+  const win = checkWin(color);
+  if (win.win) { board[r][c] = null; return 100000; }
+
+  // Check if blocking opponent win
+  board[r][c] = null;
+  board[r][c] = opp;
+  const oppWin = checkWin(opp);
+  if (oppWin.win) { board[r][c] = null; return 50000; }
+  board[r][c] = null;
+
+  // Count own connections
+  board[r][c] = color;
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  for (const [dr, dc] of dirs) {
+    let count = 1;
+    for (let k = 1; k < 5; k++) {
+      const nr = r+dr*k, nc = c+dc*k;
+      if (nr<0||nr>=ROWS||nc<0||nc>=COLS) break;
+      if (board[nr][nc] === color) count++;
+      else break;
+    }
+    for (let k = 1; k < 5; k++) {
+      const nr = r-dr*k, nc = c-dc*k;
+      if (nr<0||nr>=ROWS||nc<0||nc>=COLS) break;
+      if (board[nr][nc] === color) count++;
+      else break;
+    }
+    if (count >= 4) score += 400;
+    else if (count >= 3) score += 80;
+    else if (count >= 2) score += 15;
+  }
+
+  // ===== Red-specific progress =====
+  // 赤の勝利条件は「10段目(最上段)に赤が3個以上」なので、
+  // 連続線よりも「最上段に赤を増やす／最上段へ到達させる進捗」を強く評価する。
+  if (color === 'red') {
+    const topRow = ROWS - 1;
+    let redTopCount = 0;
+    for (let cc = 0; cc < COLS; cc++) {
+      if (board[topRow][cc] === 'red') redTopCount++;
+    }
+
+    // 最上段に到達している数（近いほど大きく加点）
+    if (redTopCount >= 3) score += 80000; // 念のため（実際の勝ちは checkWin で 100000）
+    else if (redTopCount === 2) score += 25000;
+    else if (redTopCount === 1) score += 10000;
+
+    // 縦方向の伸び（上に置くほど価値）
+    score += r * 160;
+  } else {
+    // Height bonus（青は従来のまま軽め）
+    score += r * 3;
+  }
+  // Center columns bonus
+  const centerDist = Math.abs(c - 4.5);
+  score += (5 - centerDist) * 2;
+
+  board[r][c] = null;
+  return score;
+}
+
+function aiMove(aiColor = 'red') {
+  const moves = getLegalMoves();
+  if (!moves.length) return null;
+
+  // CPU強さは「ランダム寄り度」と「最良手の採用率」で切り替える。
+  // 1: ランダム寄り, 2: 中間, 3: 最良手中心
+  if (cpuLevel === 1 && Math.random() < 0.7) {
+    return moves[Math.floor(Math.random() * moves.length)];
+  }
+
+  const noise = (cpuLevel === 1) ? 50 : (cpuLevel === 2) ? 20 : 1;
+  let best = -Infinity, bestMove = null;
+  for (const [r, c] of moves) {
+    const s = scoreMove(r, c, aiColor) + Math.random() * noise;
+    if (s > best) { best = s; bestMove = [r, c]; }
+  }
+  return bestMove;
+}
+
+// CPU戦：手番がAI側になった時、自動で1手打つ
+function cpuAutoMoveIfNeeded() {
+  if (gameMode !== 'cpu') return;
+  if (gameOver) return;
+  if (turn === cpuHumanColor) return; // 人間の手番
+
+  const aiColor = (cpuHumanColor === 'blue') ? 'red' : 'blue';
+  if (turn !== aiColor) return;
+
+  document.getElementById('thinking').classList.remove('hidden');
+  setTimeout(() => {
+    const mv = aiMove(aiColor);
+    document.getElementById('thinking').classList.add('hidden');
+    if (gameOver) return;
+    if (!mv) {
+      // 合法手がない場合でも、勝利条件が成立していないか再チェック
+      const rres = checkWin('red');
+      if (rres.win) { endGame('red', rres.cells); return; }
+      const bres = checkWin('blue');
+      if (bres.win) { endGame('blue', bres.cells); return; }
+      endGame('blue', []);
+      return;
+    }
+
+    place(mv[0], mv[1], aiColor);
+
+    const res = checkWin(aiColor);
+    if (res.win) { endGame(aiColor, res.cells); return; }
+
+    if (!getLegalMoves().length) {
+      endGame('blue', []);
+      return;
+    }
+
+    turn = cpuHumanColor;
+    turnCount++;
+    updateHeader();
+    buildGrid();
+  }, 400 + Math.random() * 300);
+}
+
+// ====== RENDER ======
+function buildGrid() {
+  const grid = document.getElementById('game-grid');
+  const labels = document.getElementById('col-labels');
+  grid.innerHTML = '';
+  labels.innerHTML = '';
+
+  // Render rows from TOP (row 9) to BOTTOM (row 0)
+  for (let r = ROWS-1; r >= 0; r--) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      const val = board[r][c];
+      if (val === 'blue') cell.classList.add('blue');
+      else if (val === 'red') cell.classList.add('red');
+      else {
+        // ヒトの手番のみクリック可能
+        if (!gameOver && isHumanTurnColor(turn) && isLegal(r, c)) {
+          cell.classList.add('placeable');
+          cell.classList.add(turn === 'blue' ? 'placeable-blue' : 'placeable-red');
+          cell.onclick = () => playerPlace(r, c);
+        }
+      }
+      if (winCells.some(([wr,wc]) => wr===r && wc===c)) cell.classList.add('win-line');
+      grid.appendChild(cell);
+    }
+  }
+
+  for (let c = 0; c < COLS; c++) {
+    const lbl = document.createElement('div');
+    lbl.className = 'col-label';
+    lbl.textContent = c + 1;
+    labels.appendChild(lbl);
+  }
+
+  // counts
+  let blue = 0, red = 0;
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
+    if (board[r][c]==='blue') blue++;
+    else if (board[r][c]==='red') red++;
+  }
+  document.getElementById('blue-count').textContent = blue;
+  document.getElementById('red-count').textContent = red;
+}
+
+function updateHeader() {
+  const ind = document.getElementById('turn-indicator');
+  if (turn === 'blue') {
+    ind.textContent = '▶ GUILD TURN';
+    ind.className = 'turn-indicator turn-player';
+  } else {
+    ind.textContent = '▶ ENEMY TURN';
+    ind.className = 'turn-indicator turn-enemy';
+  }
+  document.getElementById('turn-count').textContent = 'TURN ' + turnCount;
+
+  // ユーザーに次の手番が分かるよう、ヒントをモード・手番に応じて更新
+  const hint = document.getElementById('game-hint');
+  if (gameMode === 'cpu') {
+    hint.textContent = (turn === cpuHumanColor) ? '配置可能マスをタップ' : '相手が思考中...';
+  } else {
+    hint.textContent = (turn === 'blue')
+      ? 'ギルド（プレイヤー1）: 配置可能マスをタップ'
+      : '犯罪者（プレイヤー2）: 配置可能マスをタップ';
+  }
+}
+
+// ====== PLACE ======
+function playerPlace(r, c) {
+  if (gameOver) return;
+  if (!isHumanTurnColor(turn)) return;
+  if (!isLegal(r, c)) { showToast('そこには置けない'); return; }
+
+  const color = turn; // 'blue' or 'red'
+  place(r, c, color);
+
+  const res = checkWin(color);
+  if (res.win) { endGame(color, res.cells); return; }
+  if (!getLegalMoves().length) { endGame('blue', []); return; }
+
+  // CPU戦：人間（cpuHumanColor）→ AI（残り）
+  if (gameMode === 'cpu' && color === cpuHumanColor) {
+    const aiColor = (cpuHumanColor === 'blue') ? 'red' : 'blue';
+    turn = aiColor;
+    turnCount++;
+    updateHeader();
+    buildGrid();
+    document.getElementById('thinking').classList.remove('hidden');
+
+    setTimeout(() => {
+      const mv = aiMove(aiColor);
+      document.getElementById('thinking').classList.add('hidden');
+      if (!mv) {
+        // 合法手がない場合でも、勝利条件が成立していないか再チェック
+        const rres = checkWin('red');
+        if (rres.win) { endGame('red', rres.cells); return; }
+        const bres = checkWin('blue');
+        if (bres.win) { endGame('blue', bres.cells); return; }
+        endGame('blue', []);
+        return;
+      }
+
+      place(mv[0], mv[1], aiColor);
+
+      const aires = checkWin(aiColor);
+      if (aires.win) { endGame(aiColor, aires.cells); return; }
+
+      // 次の手番に関係なく、膠着なら防衛成功（青）
+      if (!getLegalMoves().length) {
+        endGame('blue', []);
+        return;
+      }
+
+      turn = cpuHumanColor;
+      turnCount++;
+      updateHeader();
+      buildGrid();
+    }, 400 + Math.random() * 300);
+    return;
+  }
+
+  // 対人戦：色を交互に切り替えるだけ
+  turn = (color === 'blue') ? 'red' : 'blue';
+  turnCount++;
+  updateHeader();
+  buildGrid();
+}
+
+function place(r, c, color) {
+  board[r][c] = color;
+}
+
+// ====== END ======
+function endGame(winner, cells) {
+  gameOver = true;
+  winCells = cells;
+  buildGrid();
+
+  const prevStreak = safeLoadStreak();
+  const nextStreak = (winner === 'blue') ? prevStreak + 1 : 0;
+  safeSaveStreak(nextStreak);
+  applyStreakSkin(nextStreak);
+
+  setTimeout(() => {
+    showResult(winner);
+  }, cells.length ? 800 : 200);
+}
+
+function showResult(winner) {
+  const badge = document.getElementById('result-badge');
+  const flavor = document.getElementById('result-flavor');
+
+  let blue = 0, red = 0;
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
+    if (board[r][c]==='blue') blue++;
+    else if (board[r][c]==='red') red++;
+  }
+  document.getElementById('result-turns').textContent = turnCount;
+  document.getElementById('result-blue').textContent = blue;
+  document.getElementById('result-red').textContent = red;
+
+  if (winner === 'blue') {
+    badge.textContent = 'GUILD VICTORY';
+    badge.className = 'result-badge result-win';
+    flavor.innerHTML = 'ギルドは覚醒犯罪者たちを討伐した。<br>安定領域の結界は守られ、都市に秩序が戻る。<br><span style="color:var(--guild-blue)">──ギルドの名声が世界に轟く。</span>';
+  } else if (winner === 'red') {
+    badge.textContent = 'CRIMINALS VICTORY';
+    badge.className = 'result-badge result-lose';
+    flavor.innerHTML = '犯罪者たちの暴走エネルギーがギルドを圧倒した。<br>都市は再び闇に覆われ、秩序は崩れ落ちる。<br><span style="color:var(--enemy-red)">──再起を期し、戦略を練り直せ。</span>';
+  } else {
+    badge.textContent = 'STALEMATE';
+    badge.className = 'result-badge result-draw';
+    flavor.innerHTML = '双方の力が拮抗し、戦線は膠着状態となった。<br>勝敗つかず、世界は不安定なまま揺れている。<br><span style="color:var(--gold)">──次の戦いで決着をつけろ。</span>';
+  }
+
+  show('result-screen');
+}
+
+// ====== SCREEN MGMT ======
+function show(id) {
+  ['title-screen','rule-screen','game-screen','result-screen'].forEach(s => {
+    document.getElementById(s).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function showTitle() { show('title-screen'); }
+function showRules() { show('rule-screen'); }
+
+function startGame() {
+  initBoard();
+  turn = 'blue';
+  turnCount = 1;
+  gameOver = false;
+  winCells = [];
+  document.getElementById('thinking').classList.add('hidden');
+  buildGrid();
+  updateHeader();
+  show('game-screen');
+  cpuAutoMoveIfNeeded();
+}
+
+// ====== TOAST ======
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
